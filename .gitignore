@@ -1,0 +1,7 @@
+dataset
+venv
+.venv
+.vision-cache
+tmp
+__pycache__
+images-teste
