@@ -15,6 +15,7 @@ class MangaOCREngine:
         r'^(.)\1{2,}$',                          # single char repeated 3+ times: ーーー
         r'^[A-Za-z0-9\s]+$',                     # pure latin / numbers
         r'^\W+$',                                # no word characters at all
+        r'^そういえば、$',                         # common OCR misread of そういえば、'
     ]
 
     def __init__(self):

@@ -3,8 +3,6 @@ import logging
 import os
 
 # Disable oneDNN/MKL-DNN before ANY paddle import.
-# In PaddlePaddle v3 the static executor loads oneDNN ops from compiled
-# .pdmodel files — env vars alone are not enough, we also need paddle.set_flags.
 os.environ["FLAGS_use_mkldnn"] = "0"
 os.environ["PADDLE_DISABLE_ONEDNN"] = "1"
 os.environ["FLAGS_enable_pir_api"] = "0"
@@ -32,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 class PaddleOCREngine(EngineOCR):
 
-    MIN_SCORE    = 0.3   # detection confidence threshold
+    MIN_SCORE    = 0.3
     MIN_BUBBLE_W = 20
     MIN_BUBBLE_H = 20
 
@@ -64,6 +62,11 @@ class PaddleOCREngine(EngineOCR):
         img_inv      = cv2.bitwise_not(img_enhanced)
         return {"up": img_up, "enhanced": img_enhanced, "inv": img_inv}
 
+    def release(self) -> None:
+        """Free GPU memory — call after OCR step, before translation."""
+        torch.cuda.empty_cache()
+        logger.debug("PaddleOCREngine: CUDA cache cleared")
+
     def run(self, img_path: str, output_dir: str) -> list[BubbleZone]:
         if not os.path.exists(img_path):
             logger.error("image not found: %s", img_path)
@@ -73,21 +76,82 @@ class PaddleOCREngine(EngineOCR):
         img_h, img_w = img.shape[:2]
         logger.info("processing %s (%dx%d)", os.path.basename(img_path), img_w, img_h)
 
+        # Adaptive preprocessing based on image quality
+        quality = self._assess_quality(img)
+        logger.info(
+            "quality — sharpness=%.1f  contrast=%.1f  resolution=%dpx",
+            quality["sharpness"], quality["contrast"], quality["resolution"],
+        )
+        if quality["low_res"]:
+            logger.warning("low resolution (%dpx short side) — OCR quality may suffer",
+                           quality["resolution"])
+        if quality["needs_contrast"]:
+            logger.info("contrast low (%.1f) — applying CLAHE", quality["contrast"])
+            img = self._enhance_contrast_clahe(img)
+        if quality["needs_sharpen"]:
+            logger.info("sharpness low (%.1f) — applying sharpen", quality["sharpness"])
+            img = self._sharpen(img)
+
+        # ── Detect panels on the FULL image once ─────────────────────────
+        # Magi works much better on the complete page than on split halves.
+        # We detect once here and pass pre-filtered panels to _run_single.
+        logger.debug("detecting panels with Magi on full image...")
+        all_panels = self._find_panel_dividers(img)
+        logger.info("panels found: %d", len(all_panels))
+
         split_x = self._detect_spread_split(img)
         if split_x is not None:
             logger.debug("spread detected — split at x=%d", split_x)
             left  = img[:, :split_x]
             right = img[:, split_x:]
-            results_left  = self._run_single(left,  img_path, output_dir, suffix="_L")
-            results_right = self._run_single(right, img_path, output_dir, suffix="_R",
-                                             x_offset=split_x,
-                                             id_offset=len(results_left))
+
+            # Filter and localise panels to each half
+            panels_left  = self._panels_for_half(all_panels, 0,       split_x, x_offset=0)
+            panels_right = self._panels_for_half(all_panels, split_x, img_w,   x_offset=split_x)
+            logger.debug("panels left=%d  right=%d", len(panels_left), len(panels_right))
+
+            results_left  = self._run_single(
+                left,  img_path, output_dir, suffix="_L",
+                panels=panels_left,
+            )
+            results_right = self._run_single(
+                right, img_path, output_dir, suffix="_R",
+                panels=panels_right,
+                x_offset=split_x,
+                id_offset=len(results_left),
+            )
             results = results_left + results_right
             logger.info("spread — left=%d  right=%d  total=%d bubbles",
                         len(results_left), len(results_right), len(results))
             return results
 
-        return self._run_single(img, img_path, output_dir)
+        return self._run_single(img, img_path, output_dir, panels=all_panels)
+
+    # ------------------------------------------------------------------ #
+    # Panel helpers                                                        #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _panels_for_half(
+        panels: list[tuple],
+        x_min: int,
+        x_max: int,
+        x_offset: int,
+    ) -> list[tuple]:
+        """
+        Filter panels whose centre lies within [x_min, x_max) and
+        shift their x coordinates to half-local space (subtract x_offset).
+        """
+        result = []
+        for px, py, pw, ph in panels:
+            cx = px + pw / 2
+            if x_min <= cx < x_max:
+                result.append((px - x_offset, py, pw, ph))
+        return result
+
+    # ------------------------------------------------------------------ #
+    # Core processing                                                      #
+    # ------------------------------------------------------------------ #
 
     def _run_single(
         self,
@@ -95,6 +159,7 @@ class PaddleOCREngine(EngineOCR):
         img_path: str,
         output_dir: str,
         suffix: str = "",
+        panels: list[tuple] | None = None,
         x_offset: int = 0,
         id_offset: int = 0,
     ) -> list[BubbleZone]:
@@ -112,13 +177,17 @@ class PaddleOCREngine(EngineOCR):
             cv2.imwrite(f"{output_dir}/{base_name}_up.png", variants["up"])
             logger.debug("intermediate images saved to %s", output_dir)
 
-        logger.debug("running PaddleOCR on 3 variants...")
-        rects = self._detect_text_rects(img_path, enhanced_path, inv_path)
+        logger.debug("running PaddleOCR on 2 variants...")
+        half_path = f"{output_dir}/{base_name}_half.png"
+        cv2.imwrite(half_path, img)
+        rects = self._detect_text_rects(half_path, enhanced_path, inv_path)
         logger.debug("raw text rects: %d", len(rects))
 
-        logger.debug("detecting panels with Magi...")
-        panels = self._find_panel_dividers(img)
-        logger.info("panels found: %d", len(panels))
+        # Use pre-detected panels passed from run() — no redundant Magi call
+        if panels is None:
+            logger.debug("no panels passed — detecting with Magi as fallback...")
+            panels = self._find_panel_dividers(img)
+        logger.info("panels in use: %d", len(panels))
 
         panel_groups = self._group_rects_by_panel(rects, panels)
         logger.debug("rects per panel: %s", {k: len(v) for k, v in panel_groups.items()})
@@ -133,20 +202,33 @@ class PaddleOCREngine(EngineOCR):
             if idx >= 0:
                 px, py, pw, ph = panels[idx]
                 ratio = (pw * ph) / img_area
-                max_h = ph * (0.45 if ratio > 0.15 else 0.35)
-                max_w = pw * 0.70
                 clip  = (px, py, px + pw, py + ph)
             else:
+                px, py, pw, ph = 0, 0, img_w, img_h
                 ratio = 1.0
-                max_h, max_w = None, None
                 clip  = (0, 0, img_w, img_h)
+
+            max_h, max_w = None, None
 
             if idx == -1 and group_rects:
                 logger.warning("panel -1: %d rect(s) outside all panels", len(group_rects))
 
-            if ratio > 0.30:   gap_x, gap_y = 10, 10
-            elif ratio > 0.10: gap_x, gap_y = 18, 18
-            else:              gap_x, gap_y = 10, 12
+            n_rects = len(group_rects)
+            if ratio > 0.30:
+                gap_x = 20 if n_rects > 5 else 10
+                gap_y = 25 if n_rects > 5 else 10
+                max_h = ph * 0.60
+                max_w = pw * 0.80
+            elif ratio > 0.10:
+                gap_x = 25 if n_rects > 3 else 18
+                gap_y = 35 if n_rects > 3 else 18
+                max_h = ph * 0.55
+                max_w = pw * 0.80
+            else:
+                gap_x = 20
+                gap_y = 30
+                max_h = ph * 0.70
+                max_w = pw * 0.80
 
             bubbles = self._group_nearby_rects(
                 group_rects, gap_x=gap_x, gap_y=gap_y, max_w=max_w, max_h=max_h,
@@ -209,24 +291,19 @@ class PaddleOCREngine(EngineOCR):
         white_thresh: int = 240,
         min_white_col_pct: float = 0.85,
     ) -> int | None:
-        """
-        Detect a double-page spread and return the x coordinate of the gutter.
-        Returns None if the image is portrait or no clear white gutter is found.
-        Only images wider than they are tall are considered spreads.
-        """
         h, w = img.shape[:2]
         if w <= h:
             return None
 
-        gray    = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        center  = w // 2
+        gray      = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        center    = w // 2
         band_half = int(w * search_band / 2)
-        x_start = center - band_half
-        x_end   = center + band_half
+        x_start   = center - band_half
+        x_end     = center + band_half
 
-        band           = gray[:, x_start:x_end]
-        white_mask     = (band >= white_thresh).astype(np.float32)
-        col_white_pct  = white_mask.mean(axis=0)
+        band          = gray[:, x_start:x_end]
+        white_mask    = (band >= white_thresh).astype(np.float32)
+        col_white_pct = white_mask.mean(axis=0)
 
         gutter_cols = np.where(col_white_pct >= min_white_col_pct)[0]
         if len(gutter_cols) == 0:
@@ -239,25 +316,17 @@ class PaddleOCREngine(EngineOCR):
     # ------------------------------------------------------------------ #
 
     def _init_paddle(self) -> "PaddleOCR":
-        """
-        Initialise PaddleOCR, trying constructors in this order:
-          1. v3 server models  (PP-OCRv4_server_* — best accuracy for Japanese)
-          2. v3 mobile models  (PP-OCRv4_mobile_* — oneDNN-free fallback)
-          3. v3 default        (lang= only, let PaddleOCR pick)
-          4. v2 API            (use_angle_cls= signature)
-
-        oneDNN is disabled globally via env vars at module load and via
-        paddle.set_flags() above, so server models should work on most hardware.
-        Mobile models are kept only as a last resort because they sacrifice
-        detection accuracy — especially for dense vertical Japanese text.
-        """
-        # 1. v3 server models — highest accuracy, oneDNN disabled via env
+        # 1. v3 server models — highest accuracy
         try:
             ocr = PaddleOCR(
                 lang="japan",
                 ocr_version="PP-OCRv4",
                 det_model_name="PP-OCRv4_server_det",
                 rec_model_name="PP-OCRv4_server_rec",
+                use_angle_cls=True,
+                use_gpu=torch.cuda.is_available(),
+                det_db_thresh=0.2,
+                det_db_box_thresh=0.3,
             )
             logger.debug("PaddleOCR initialised with v3 server models (best accuracy)")
             return ocr
@@ -266,13 +335,14 @@ class PaddleOCREngine(EngineOCR):
         except Exception as e:
             logger.warning("v3 server init failed (%s) — falling back to mobile models", e)
 
-        # 2. v3 mobile models — lighter, oneDNN-free, less accurate
+        # 2. v3 mobile models
         try:
             ocr = PaddleOCR(
                 lang="japan",
                 ocr_version="PP-OCRv4",
                 det_model_name="PP-OCRv4_mobile_det",
                 rec_model_name="PP-OCRv4_mobile_rec",
+                use_angle_cls=True,
             )
             logger.debug("PaddleOCR initialised with v3 mobile models (fallback)")
             return ocr
@@ -281,7 +351,7 @@ class PaddleOCREngine(EngineOCR):
         except Exception as e:
             logger.warning("v3 mobile init failed (%s) — trying v3 default", e)
 
-        # 3. v3 default — let PaddleOCR pick models
+        # 3. v3 default
         try:
             ocr = PaddleOCR(lang="japan")
             logger.debug("PaddleOCR initialised with v3 default constructor")
@@ -289,7 +359,7 @@ class PaddleOCREngine(EngineOCR):
         except TypeError:
             pass
 
-        # 4. v2 API: PaddleOCR(use_angle_cls=True, lang=..., use_gpu=...)
+        # 4. v2 API fallback
         try:
             ocr = PaddleOCR(
                 use_angle_cls=True,
@@ -307,8 +377,13 @@ class PaddleOCREngine(EngineOCR):
     def _detect_text_rects(
         self, img_path: str, enhanced_path: str, inv_path: str
     ) -> list[tuple]:
+        img       = cv2.imread(img_path)
+        best      = self._best_variant(img)
+        best_path = enhanced_path.replace("_enhanced", "_best")
+        cv2.imwrite(best_path, best)
+
         rects = []
-        for path, scale in ((img_path, 1), (enhanced_path, 0.5), (inv_path, 0.5)):
+        for path, scale in ((img_path, 1), (best_path, 0.5)):
             boxes = self._paddle_boxes(path)
             logger.debug("PaddleOCR hits — %s: %d", os.path.basename(path), len(boxes))
             for x, y, w, h in boxes:
@@ -317,36 +392,20 @@ class PaddleOCREngine(EngineOCR):
         return rects
 
     def _paddle_boxes(self, img_path: str) -> list[tuple]:
-        """
-        Run PaddleOCR detection and return (x, y, w, h) for each text region.
-        Supports both v2 (.ocr()) and v3 (.predict()) APIs.
-        """
-        # v3 API
         if hasattr(self._ocr, 'predict'):
             raw = self._ocr.predict(img_path)
             return self._parse_v3(raw)
-        # v2 API
         raw = self._ocr.ocr(img_path, cls=True)
         return self._parse_v2(raw)
 
     def _parse_v3(self, raw) -> list[tuple]:
-        """Parse PaddleOCR v3 predict() output.
-
-        Key fix: use det_poly (DB Net detection quadrilateral) not rec_poly.
-        rec_poly is the recognition crop region — it can be smaller or shifted
-        relative to the actual detected text boundary. det_poly is the raw
-        output of the detection stage and gives the tightest, most accurate bbox.
-        Fall back to rec_poly only when det_poly is absent (older v3 builds).
-        """
         boxes, low_score = [], 0
         if not raw:
             return boxes
-        # v3 returns a list of Result objects per image
         for result in raw:
             for item in (result if isinstance(result, list) else [result]):
                 try:
                     if isinstance(item, dict):
-                        # Prefer det_poly; fall back to rec_poly for old builds
                         quad  = item.get('det_poly') or item.get('rec_poly')
                         score = item.get('rec_score', 1.0)
                     else:
@@ -368,7 +427,6 @@ class PaddleOCREngine(EngineOCR):
         return boxes
 
     def _parse_v2(self, raw) -> list[tuple]:
-        """Parse PaddleOCR v2 ocr() output."""
         boxes, low_score = [], 0
         if not raw or raw[0] is None:
             return boxes
@@ -441,6 +499,19 @@ class PaddleOCREngine(EngineOCR):
         return panel_groups
 
     @staticmethod
+    def _best_variant(img: cv2.typing.MatLike) -> cv2.typing.MatLike:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        mean = gray.mean()
+        # skip upscale — PaddleOCR handles resolution internally
+        # upscaling beyond det_limit_side_len causes double-scaling errors
+        enhanced = PaddleOCREngine._sharpen(
+            PaddleOCREngine._enhance_contrast_clahe(img)
+        )
+        if mean < 100:
+            return cv2.bitwise_not(enhanced)
+        return enhanced
+
+    @staticmethod
     def _crop_bubble(
         img: cv2.typing.MatLike,
         x: int, y: int, w: int, h: int,
@@ -459,20 +530,13 @@ class PaddleOCREngine(EngineOCR):
         return crop_path
 
     def _group_nearby_rects(
-        self, rects: list[tuple],
+        self,
+        rects: list[tuple],
         gap_x: int = 20, gap_y: int = 20,
         max_h: float | None = None, max_w: float | None = None,
         h_dividers: list | None = None,
         v_dividers: list | None = None,
     ) -> list[tuple]:
-        """
-        Cluster nearby rects into bubble candidates.
-
-        h_dividers / v_dividers: pixel positions of horizontal / vertical
-        panel boundaries. A merged bbox that crosses a divider is rejected,
-        preventing characters from two adjacent panels being folded into one
-        bubble (bug that was absent in EasyOCR but present here).
-        """
         if not rects:
             return []
 
@@ -510,8 +574,8 @@ class PaddleOCREngine(EngineOCR):
                     if any(near(a, b) for a in ci for b in cj):
                         candidate      = group + list(cj)
                         bx, by, bw, bh = cluster_bbox(candidate)
-                        if max_h and bh > max_h:              continue
-                        if max_w and bw > max_w:              continue
+                        if max_h and bh > max_h:                  continue
+                        if max_w and bw > max_w:                  continue
                         if bbox_crosses_divider(bx, by, bw, bh): continue
                         group = candidate
                         used.add(j)
@@ -558,6 +622,22 @@ class PaddleOCREngine(EngineOCR):
     # ------------------------------------------------------------------ #
     # Static image processing utilities                                    #
     # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _assess_quality(img: cv2.typing.MatLike) -> dict:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        h, w = gray.shape
+        sharpness  = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+        contrast   = float(gray.std())
+        resolution = min(h, w)
+        return {
+            "sharpness":      round(sharpness, 1),
+            "contrast":       round(contrast,  1),
+            "resolution":     resolution,
+            "needs_sharpen":  sharpness < 120,
+            "needs_contrast": contrast  <  35,
+            "low_res":        resolution < 800,
+        }
 
     @staticmethod
     def _upscale(img: cv2.typing.MatLike, scale: int = 2) -> cv2.typing.MatLike:

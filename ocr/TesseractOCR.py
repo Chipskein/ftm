@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class TesseractOCR(EngineOCR):
 
-    MIN_CONF = 5
+    MIN_CONF     = 65
     MIN_BUBBLE_W = 30
     MIN_BUBBLE_H = 30
 
@@ -29,10 +29,12 @@ class TesseractOCR(EngineOCR):
         monitor: ResourceMonitor | None = None,
     ):
         super().__init__("TesseractOCR")
-        self.magi  = magi_model
-        self.debug = debug
+        self.magi    = magi_model
+        self.debug   = debug
+        self.monitor = monitor
+        # PSM 11 — sparse text, best for manga's scattered layout
         self.tesseract_cfg = "--oem 1 --psm 11"
-        self.lang  = "jpn+jpn_vert"
+        self.lang = "jpn+jpn_vert"
         if debug:
             logger.setLevel(logging.DEBUG)
         logger.debug("TesseractOCR initialised  lang=%s  cfg=%s", self.lang, self.tesseract_cfg)
@@ -50,6 +52,11 @@ class TesseractOCR(EngineOCR):
         img_inv      = cv2.bitwise_not(img_enhanced)
         return {"up": img_up, "enhanced": img_enhanced, "inv": img_inv}
 
+    def release(self) -> None:
+        """Free GPU memory — call after OCR step, before translation."""
+        torch.cuda.empty_cache()
+        logger.debug("TesseractOCR: CUDA cache cleared")
+
     def run(self, img_path: str, output_dir: str) -> list[BubbleZone]:
         if not os.path.exists(img_path):
             logger.error("image not found: %s", img_path)
@@ -57,10 +64,54 @@ class TesseractOCR(EngineOCR):
 
         img = self.loadImage(img_path)
         img_h, img_w = img.shape[:2]
-        img_area = img_h * img_w
         logger.info("processing image %s (%dx%d)", os.path.basename(img_path), img_w, img_h)
 
-        base_name = os.path.splitext(os.path.basename(img_path))[0]
+        # Adaptive preprocessing based on image quality
+        quality = self._assess_quality(img)
+        logger.info(
+            "quality — sharpness=%.1f  contrast=%.1f  resolution=%dpx",
+            quality["sharpness"], quality["contrast"], quality["resolution"],
+        )
+        if quality["low_res"]:
+            logger.warning("low resolution (%dpx short side) — OCR quality may suffer",
+                           quality["resolution"])
+        if quality["needs_contrast"]:
+            logger.info("contrast low (%.1f) — applying CLAHE", quality["contrast"])
+            img = self._enhance_contrast_clahe(img)
+        if quality["needs_sharpen"]:
+            logger.info("sharpness low (%.1f) — applying sharpen", quality["sharpness"])
+            img = self._sharpen(img)
+
+        # Double-page spread handling
+        split_x = self._detect_spread_split(img)
+        if split_x is not None:
+            logger.debug("spread detected — split at x=%d", split_x)
+            left  = img[:, :split_x]
+            right = img[:, split_x:]
+            results_left  = self._run_single(left,  img_path, output_dir, suffix="_L")
+            results_right = self._run_single(right, img_path, output_dir, suffix="_R",
+                                             x_offset=split_x,
+                                             id_offset=len(results_left))
+            results = results_left + results_right
+            logger.info("spread — left=%d  right=%d  total=%d bubbles",
+                        len(results_left), len(results_right), len(results))
+            return results
+
+        return self._run_single(img, img_path, output_dir)
+
+    def _run_single(
+        self,
+        img: cv2.typing.MatLike,
+        img_path: str,
+        output_dir: str,
+        suffix: str = "",
+        x_offset: int = 0,
+        id_offset: int = 0,
+    ) -> list[BubbleZone]:
+        img_h, img_w = img.shape[:2]
+        img_area = img_h * img_w
+
+        base_name = os.path.splitext(os.path.basename(img_path))[0] + suffix
         variants  = self.preProcessImage(img)
 
         enhanced_path = f"{output_dir}/{base_name}_enhanced.png"
@@ -71,7 +122,7 @@ class TesseractOCR(EngineOCR):
             cv2.imwrite(f"{output_dir}/{base_name}_up.png", variants["up"])
             logger.debug("intermediate images saved to %s", output_dir)
 
-        logger.debug("running Tesseract on 3 variants...")
+        logger.debug("running Tesseract on 2 variants...")
         rects = self._detect_text_rects(img_path, enhanced_path, inv_path)
         logger.debug("raw text rects: %d", len(rects))
 
@@ -117,15 +168,14 @@ class TesseractOCR(EngineOCR):
 
             color = (0, 255, 0) if idx >= 0 else (0, 165, 255)
             for x, y, w, h in bubbles:
-                # Clip to panel bounds
-                x1 = max(x, clip[0]);  y1 = max(y, clip[1])
-                x2 = min(x + w, clip[2]); y2 = min(y + h, clip[3])
+                x1 = max(x, clip[0]);      y1 = max(y, clip[1])
+                x2 = min(x + w, clip[2]);  y2 = min(y + h, clip[3])
                 if x2 - x1 < self.MIN_BUBBLE_W or y2 - y1 < self.MIN_BUBBLE_H:
                     logger.debug("bubble clipped to nothing in panel %d, skipping", idx)
                     continue
                 x, y, w, h = x1, y1, x2 - x1, y2 - y1
 
-                bubble_id = len(results) + 1
+                bubble_id = id_offset + len(results) + 1
                 crop_path = self._crop_bubble(img, x, y, w, h, crops_dir, base_name, bubble_id)
                 if crop_path is None:
                     logger.warning("empty crop skipped (bubble_id=%d)", bubble_id)
@@ -133,7 +183,7 @@ class TesseractOCR(EngineOCR):
                 logger.debug("[%d] bubble at (%d,%d,%d,%d) panel=%d → %s",
                              bubble_id, x, y, w, h, idx, os.path.basename(crop_path))
                 results.append(BubbleZone(
-                    id=bubble_id, x=x, y=y, w=w, h=h,
+                    id=bubble_id, x=x + x_offset, y=y, w=w, h=h,
                     crop=crop_path, jp_text="", en_text="", translated_text="",
                 ))
                 cv2.rectangle(out, (x, y), (x + w, y + h), color, 2)
@@ -165,10 +215,20 @@ class TesseractOCR(EngineOCR):
     def _detect_text_rects(
         self, img_path: str, enhanced_path: str, inv_path: str
     ) -> list[tuple]:
+        """
+        Run Tesseract on original + best variant (2 instead of 3).
+        _best_variant selects enhanced or inverted based on background brightness,
+        cutting duplicate detections roughly in half vs the old 3-variant approach.
+        """
+        img     = cv2.imread(img_path)
+        best    = self._best_variant(img)
+        best_path = enhanced_path.replace("_enhanced", "_best")
+        cv2.imwrite(best_path, best)
+
         rects = []
-        for path, scale in ((img_path, 1), (enhanced_path, 0.5), (inv_path, 0.5)):
-            img   = cv2.imread(path)
-            boxes = self._tesseract_boxes(img)
+        for path, scale in ((img_path, 1), (best_path, 0.5)):
+            src  = cv2.imread(path)
+            boxes = self._tesseract_boxes(src)
             logger.debug("Tesseract hits — %s: %d", os.path.basename(path), len(boxes))
             for x, y, w, h in boxes:
                 rects.append((int(x * scale), int(y * scale),
@@ -234,7 +294,6 @@ class TesseractOCR(EngineOCR):
                  if px <= rc_x <= px + pw and py <= rc_y <= py + ph),
                 -1,
             )
-            # Fallback: centroid missed — assign by largest overlap
             if idx == -1 and panels:
                 best_area, best_idx = 0, -1
                 for i, (px, py, pw, ph) in enumerate(panels):
@@ -251,6 +310,61 @@ class TesseractOCR(EngineOCR):
                     idx = best_idx
             panel_groups[idx].append((rx, ry, rw, rh))
         return panel_groups
+
+    # ------------------------------------------------------------------ #
+    # Spread detection (double-page)                                       #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _detect_spread_split(
+        img: cv2.typing.MatLike,
+        search_band: float = 0.15,
+        white_thresh: int = 240,
+        min_white_col_pct: float = 0.85,
+    ) -> int | None:
+        """
+        Detect a double-page spread and return the x coordinate of the gutter.
+        Returns None if the image is portrait or no clear white gutter is found.
+        """
+        h, w = img.shape[:2]
+        if w <= h:
+            return None
+
+        gray      = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        center    = w // 2
+        band_half = int(w * search_band / 2)
+        x_start   = center - band_half
+        x_end     = center + band_half
+
+        band          = gray[:, x_start:x_end]
+        white_mask    = (band >= white_thresh).astype(np.float32)
+        col_white_pct = white_mask.mean(axis=0)
+
+        gutter_cols = np.where(col_white_pct >= min_white_col_pct)[0]
+        if len(gutter_cols) == 0:
+            return None
+
+        return x_start + int(gutter_cols.mean())
+
+    # ------------------------------------------------------------------ #
+    # Static helpers                                                       #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _best_variant(img: cv2.typing.MatLike) -> cv2.typing.MatLike:
+        """
+        Return the most useful upscaled variant for this image.
+        Dark backgrounds (white text on black) get inverted;
+        light backgrounds get enhanced only.
+        """
+        gray   = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        mean   = gray.mean()
+        img_up = cv2.resize(img, (img.shape[1] * 2, img.shape[0] * 2),
+                            interpolation=cv2.INTER_CUBIC)
+        enhanced = TesseractOCR._sharpen(TesseractOCR._enhance_contrast_clahe(img_up))
+        if mean < 100:
+            return cv2.bitwise_not(enhanced)
+        return enhanced
 
     @staticmethod
     def _crop_bubble(
@@ -271,12 +385,22 @@ class TesseractOCR(EngineOCR):
         return crop_path
 
     def _group_nearby_rects(
-        self, rects: list[tuple],
+        self,
+        rects: list[tuple],
         gap_x: int = 20, gap_y: int = 20,
         max_h: float | None = None, max_w: float | None = None,
+        h_dividers: list | None = None,
+        v_dividers: list | None = None,
     ) -> list[tuple]:
+        """
+        Cluster nearby rects into bubble candidates.
+        h_dividers/v_dividers prevent merging across panel boundaries.
+        """
         if not rects:
             return []
+
+        h_dividers = h_dividers or []
+        v_dividers = v_dividers or []
 
         def cluster_bbox(cluster):
             x  = min(r[0] for r in cluster)
@@ -284,6 +408,12 @@ class TesseractOCR(EngineOCR):
             x2 = max(r[0] + r[2] for r in cluster)
             y2 = max(r[1] + r[3] for r in cluster)
             return (x, y, x2 - x, y2 - y)
+
+        def bbox_crosses_divider(x, y, w, h):
+            return (
+                any(x < d < x + w for d in v_dividers) or
+                any(y < d < y + h for d in h_dividers)
+            )
 
         def near(a, b):
             return (a[0] - gap_x < b[0] + b[2] and a[0] + a[2] + gap_x > b[0] and
@@ -303,8 +433,9 @@ class TesseractOCR(EngineOCR):
                     if any(near(a, b) for a in ci for b in cj):
                         candidate      = group + list(cj)
                         bx, by, bw, bh = cluster_bbox(candidate)
-                        if max_h and bh > max_h: continue
-                        if max_w and bw > max_w: continue
+                        if max_h and bh > max_h:                  continue
+                        if max_w and bw > max_w:                  continue
+                        if bbox_crosses_divider(bx, by, bw, bh): continue
                         group = candidate
                         used.add(j)
                         changed = True
@@ -350,6 +481,31 @@ class TesseractOCR(EngineOCR):
     # ------------------------------------------------------------------ #
     # Static image processing utilities                                    #
     # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _assess_quality(img: cv2.typing.MatLike) -> dict:
+        """
+        Assess sharpness, contrast and resolution of the full page image.
+        Thresholds tuned for scanned manga pages:
+          sharpness  < 120  → blurry scan, apply unsharp mask
+          contrast   <  35  → faded/low-contrast, apply CLAHE
+          resolution < 800  → very small image, log a warning
+        """
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        h, w = gray.shape
+
+        sharpness  = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+        contrast   = float(gray.std())
+        resolution = min(h, w)
+
+        return {
+            "sharpness":      round(sharpness, 1),
+            "contrast":       round(contrast,  1),
+            "resolution":     resolution,
+            "needs_sharpen":  sharpness < 120,
+            "needs_contrast": contrast  <  35,
+            "low_res":        resolution < 800,
+        }
 
     @staticmethod
     def _upscale(img: cv2.typing.MatLike, scale: int = 2) -> cv2.typing.MatLike:
