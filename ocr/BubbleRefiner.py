@@ -66,7 +66,7 @@ class BubbleRefiner:
                 skipped += 1
                 continue
 
-            upscaled_path = self._upscale_crop(crop_path)
+            upscaled_path = None#self._upscale_crop(crop_path)
             result = self._refine_crop(upscaled_path or crop_path)
 
             if result is not None:

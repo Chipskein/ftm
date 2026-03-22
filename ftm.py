@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+
+import warnings
+warnings.filterwarnings("ignore")
+
 import json
 import os
 import time
@@ -31,9 +36,9 @@ def run_step(label: str, fn):
         raise
 
 def parseArgs() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="FTM — Manga Translation Pipeline")
+    parser = argparse.ArgumentParser(description="FTM")
 
-    parser.add_argument("--engine", default="easyocr", choices=["easy", "tesseract","paddle"],
+    parser.add_argument("--engine", default="easy", choices=["easy", "tesseract","paddle"],
                         help="OCR engine to use during detection step")
     parser.add_argument("--image", required=True, help="Path to input image")
     parser.add_argument("--output", help="Path to output image")
@@ -46,6 +51,11 @@ def parseArgs() -> argparse.Namespace:
                         help="Only run detection step")
     parser.add_argument("--ocr-only", action="store_true", default=False,
                         help="Only run OCR step")
+    parser.add_argument("--translate-lang", default="en", 
+                        help="Language to translate to (default: en)", choices=["en", "pt"])
+    parser.add_argument("--translate-model", default="translategemma:4b",
+                        help="Ollama model to use for translation (default: translategemma:4b)", 
+                        choices=["translategemma:4b", "translategemma:12b"])
 
     return parser.parse_args()
 
@@ -115,17 +125,33 @@ def main():
             monitor.stop()
         return
     
-    def run_translate():
-        translator = OllamaTranslator(source_lang="ja")
-        for i, bubble in enumerate(bubbles):
-            en_text = translator.translate(bubble["jp_text"], lang="en")
-            bubble["en_text"] = en_text
-            bubble["translated_text"] = en_text
-            if debug:
-                print(f"  [{i+1}/{len(bubbles)}] {bubble['jp_text']!r} → {en_text!r}")
-        return bubbles
+    def run_translate(target_lang, field_name="translated_text"):
+        translator = OllamaTranslator(source_lang="ja", model=args.translate_model)
 
-    bubbles = run_step(label="Translate JP → EN", fn=run_translate)
+        for i, bubble in enumerate(bubbles):
+            translated = translator.translate(bubble["jp_text"], lang=target_lang)
+            bubble[field_name] = translated
+
+            if debug:
+                print(f"  [{i+1}/{len(bubbles)}] {bubble['jp_text']!r} → {translated!r}")
+
+        return bubbles
+    
+    bubbles = run_step(
+        label="Translate JP → EN",
+        fn=lambda: run_translate("en", field_name="en_text")
+    )
+
+    if args.translate_lang == "en":
+        print("\n⚠  --translate-lang set to 'en'. Skipping JP → PT translation step.")
+        for bubble in bubbles:
+            bubble["translated_text"] = bubble["en_text"]
+            
+    else:
+        bubbles = run_step(
+            label=f"Translate JP → {str(args.translate_lang).upper()}",
+            fn=lambda: run_translate(str(args.translate_lang).lower(), field_name="translated_text")
+        )
 
     run_step(
         label="Typeset translated text",

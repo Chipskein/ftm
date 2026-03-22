@@ -1,12 +1,8 @@
 import os
 import textwrap
-
-import numpy as np
-import cv2
 from PIL import Image, ImageDraw, ImageFont
-
 from ocr.types.BubbleZone import BubbleZone
-
+import re
 
 class BubbleTypesetter:
     """
@@ -23,7 +19,13 @@ class BubbleTypesetter:
     TEXT_COLOR = (0, 0, 0)
     PADDING    = 4       # px inside the text area
     SR_SCALE   = 2       # upscale factor used during refinement
+    MIN_COVERAGE_RATIO = 0.05  # polygon must cover at least 5% of the bbox
     FONT_PATH = os.path.join("fonts", "KOMIKAX_.ttf")
+    ONOMATOPOEIA_PATTERNS = [
+        r'^[ァ-ン゛゜ーッ！？\s]+$',   # pure katakana (most JP onomatopoeia)
+        r'^[A-Za-z]{2,}[!\?～〜]*$',   # romaji sound words: HA, BOOM, CRASH
+        r'^[！？\?!～〜ー・\s]+$',       # pure punctuation/symbols only
+    ]
 
     def _get_font(self, size: int):
         try:
@@ -31,6 +33,14 @@ class BubbleTypesetter:
         except Exception as e:
             print(f"[WARN] Falha ao carregar fonte: {e}")
             return ImageFont.load_default()
+        
+    def _has_valid_polygon(self, polygon, w: int, h: int) -> bool:
+        bbox_area = w * h
+        if bbox_area == 0:
+            return False
+        poly_area = self._polygon_area(polygon)
+        ratio = poly_area / bbox_area
+        return ratio >= self.MIN_COVERAGE_RATIO
 
     def typeset(
         self,
@@ -45,11 +55,16 @@ class BubbleTypesetter:
             if not text:
                 continue
 
+            if self._is_onomatopoeia(text):
+                continue
+
             x, y, w, h = bubble["x"], bubble["y"], bubble["w"], bubble["h"]
             polygon = bubble.get("polygon")
 
             if polygon:
                 page_poly = self._to_page_coords(polygon, x, y, self.SR_SCALE)
+                if not self._has_valid_polygon(page_poly, w, h):
+                    continue
                 self._draw_polygon_bubble(img, page_poly, x, y, w, h, text)
             else:
                 self._draw_rect_bubble(img, x, y, w, h, text)
@@ -113,6 +128,11 @@ class BubbleTypesetter:
     # ------------------------------------------------------------------ #
     # Coordinate transform                                                 #
     # ------------------------------------------------------------------ #
+
+    def _is_onomatopoeia(self, text: str) -> bool:
+        """Return True if text looks like an onomatopoeia (skip typesetting)."""
+        t = text.strip()
+        return any(re.fullmatch(p, t) for p in self.ONOMATOPOEIA_PATTERNS)
 
     @staticmethod
     def _to_page_coords(
@@ -186,3 +206,14 @@ class BubbleTypesetter:
         sample = "abcdefghijklmnopqrstuvwxyz"
         bbox   = draw.textbbox((0, 0), sample, font=font)
         return (bbox[2] - bbox[0]) // len(sample)
+
+    @staticmethod
+    def _polygon_area(poly: list[tuple[int, int]]) -> float:
+        """Shoelace formula."""
+        n = len(poly)
+        area = 0.0
+        for i in range(n):
+            x1, y1 = poly[i]
+            x2, y2 = poly[(i + 1) % n]
+            area += x1 * y2 - x2 * y1
+        return abs(area) / 2.0

@@ -2,6 +2,6 @@ dataset
 venv
 .venv
 .vision-cache
-tmp
+tmp*
 __pycache__
-images-teste
+images-teste*

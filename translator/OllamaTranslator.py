@@ -15,8 +15,11 @@ LANG_NAMES: dict[str, str] = {
     "ar": "Arabic",
 }
 
-MODEL = "translategemma"
-
+MODEL = "translategemma:4b"
+AVAILABLE_MODEL = [
+    "translategemma:4b",
+    "translategemma:12b"
+]
 
 class OllamaTranslator:
     """
@@ -24,19 +27,25 @@ class OllamaTranslator:
     translategemma model via Ollama.
 
     Requires Ollama to be running locally with translategemma pulled:
-        ollama pull translategemma
+        ollama pull translategemma:4b
     """
 
     def __init__(self, source_lang: str = "ja", model: str = MODEL):
         """
         Args:
             source_lang : source language code (e.g. 'ja', 'en')
-            model       : Ollama model name (default: translategemma)
+            model       : Ollama model name (default: translategemma:4b)
         """
         if source_lang not in LANG_NAMES:
             raise ValueError(
                 f"Unknown source language '{source_lang}'. "
                 f"Supported: {list(LANG_NAMES.keys())}"
+            )
+        
+        if model not in AVAILABLE_MODEL:
+            raise ValueError(
+                f"Unknown model '{model}'. "
+                f"Supported: {AVAILABLE_MODEL}"
             )
         self.source_lang = source_lang
         self.source_name = LANG_NAMES[source_lang]
