@@ -1,8 +1,5 @@
-from ocr.TesseractOCR import TesseractOCR
 from ocr.types.BubbleZone import BubbleZone
 from ocr.EngineOCR import EngineOCR
-from ocr.EazyocrMagiPanel import EazyOCR, load_magi
-from ocr.PaddleOCREngine import PaddleOCREngine
 from utils.resource import ResourceMonitor
 
 SUPPORTED_ENGINES = ("easy", "tesseract","paddle")
@@ -12,14 +9,23 @@ def build_engine(
     debug: bool = False,
     monitor: ResourceMonitor | None = None,
 ) -> EngineOCR:
+    
+    from ocr.PanelDetector import load_magi    
     magi = load_magi()
+
     match engine_name:
         case "easy":
+            from ocr.EazyOcr import EazyOCR
             return EazyOCR(magi, debug)
+        
         case "tesseract":
+            from ocr.TesseractOCR import TesseractOCR
             return TesseractOCR(magi, debug, monitor)
+        
         case "paddle":
+            from ocr.PaddleOCREngine import PaddleOCREngine
             return PaddleOCREngine(magi, debug)
+        
         case _:
             raise ValueError(
                 f"Unsupported OCR engine: {engine_name!r}. "
