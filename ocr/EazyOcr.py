@@ -6,19 +6,25 @@ import cv2
 import easyocr
 import numpy as np
 import torch
-from PIL import Image
-from transformers import AutoModel
 
 from .EngineOCR import EngineOCR
 from .types.BubbleZone import BubbleZone
+from utils.resource import ResourceMonitor
+from ocr.PanelDetector import PanelDetector
 
 logger = logging.getLogger(__name__)
 
 class EazyOCR(EngineOCR):
 
-    def __init__(self, magi_model: AutoModel, debug: bool = False):
+    def __init__(
+            self, 
+            panel_detector: PanelDetector | None = None,
+            debug: bool = False,
+            monitor: ResourceMonitor | None = None,
+    ):
         super().__init__("EazyOCR")
-        self.magi = magi_model
+        self.panel_detector = panel_detector
+        self.monitor = monitor
         self.debug = debug
         self.reader = easyocr.Reader(["ja"], gpu=torch.cuda.is_available())
         self.reader_cfg = dict(
@@ -28,6 +34,8 @@ class EazyOCR(EngineOCR):
         if debug:
             logger.setLevel(logging.DEBUG)
         logger.debug("EazyOCR initialised (gpu=%s)", torch.cuda.is_available())
+        logger.debug("EasyOCR config: %s", self.reader_cfg)
+        logger.debug("Panel detector: %s", self.panel_detector.__class__.__name__)
 
     # ------------------------------------------------------------------ #
     # Abstract method implementations                                      #
@@ -114,8 +122,8 @@ class EazyOCR(EngineOCR):
         rects = self._detect_text_rects(img_path, enhanced_path, inv_path)
         logger.debug("raw text rects: %d", len(rects))
 
-        logger.debug("detecting panels with Magi...")
-        panels = self._find_panel_dividers(img)
+        logger.debug("detecting panels ...")
+        panels = self.panel_detector._find_panel_dividers(img)
         logger.info("panels found: %d", len(panels))
 
         panel_groups = self._group_rects_by_panel(rects, panels)
@@ -273,37 +281,6 @@ class EazyOCR(EngineOCR):
             x, y, w, h = cv2.boundingRect(np.array(bbox, dtype=np.int32))
             rects.append((x // 2, y // 2, w // 2, h // 2))
         return rects
-
-    def _find_panel_dividers(self, img: cv2.typing.MatLike) -> list[tuple]:
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_np = np.array(Image.fromarray(img_rgb).convert("L").convert("RGB"))
-
-        character_bank = {"images": [], "names": []}
-        with torch.no_grad():
-            results = self.magi.do_chapter_wide_prediction(
-                [img_np], character_bank, use_tqdm=False, do_ocr=False
-            )
-
-        panels = results[0]["panels"]
-        panel_rects = [
-            (int(p[0]), int(p[1]), int(p[2] - p[0]), int(p[3] - p[1]))
-            for p in panels
-        ]
-        logger.debug("Magi raw panels: %d → %s", len(panel_rects), panel_rects)
-
-        def contains(outer, inner):
-            ox, oy, ow, oh = outer
-            ix, iy, iw, ih = inner
-            return ox <= ix and oy <= iy and ox + ow >= ix + iw and oy + oh >= iy + ih
-
-        panel_rects = [
-            p for i, p in enumerate(panel_rects)
-            if not any(contains(p, other) for j, other in enumerate(panel_rects) if i != j)
-        ]
-        logger.debug("Magi panels after containment filter: %d → %s",
-                     len(panel_rects), panel_rects)
-
-        return panel_rects
 
     def _group_rects_by_panel(
         self, rects: list[tuple], panels: list[tuple]

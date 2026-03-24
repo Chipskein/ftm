@@ -1,24 +1,29 @@
+from abc import ABC, abstractmethod
+import numpy as np
 
-import logging
-import os
-import warnings
-import torch
-from transformers import AutoModel
+class PanelDetector(ABC):
+    """
+    Abstract interface for manga panel detectors.
 
-warnings.filterwarnings("ignore")
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    All implementations must return panels as list[tuple[x, y, w, h]],
+    which is the format expected by EazyOCR._find_panel_dividers.
+    """
 
-logger = logging.getLogger(__name__)
+    @abstractmethod
+    def _find_panel_dividers(self, img: np.ndarray) -> list[tuple]:
+        """
+        Detect panels in a BGR numpy image.
 
-def load_magi() -> AutoModel:
-    logger.info("loading Magi v2 model...")
-    model = AutoModel.from_pretrained(
-        "ragavsachdeva/magiv2", trust_remote_code=True
-    )
-    model.eval()
-    if torch.cuda.is_available():
-        model = model.cuda()
-        logger.info("Magi loaded on GPU")
-    else:
-        logger.info("Magi loaded on CPU")
-    return model
+        Returns:
+            List of (x, y, w, h) tuples, one per detected panel.
+        """
+
+    def _contains(self, outer: tuple, inner: tuple, margin: int = 0) -> bool:
+        ox, oy, ow, oh = outer
+        ix, iy, iw, ih = inner
+        return (
+            ox - margin <= ix
+            and oy - margin <= iy
+            and ox + ow + margin >= ix + iw
+            and oy + oh + margin >= iy + ih
+        )

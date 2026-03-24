@@ -21,7 +21,7 @@ super_image
 paddlepaddle 
 paddleocr
 paddlepaddle-gpu
-
+ultralytics
 
 
 

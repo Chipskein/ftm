@@ -2,6 +2,9 @@ import json
 import logging
 import os
 
+from ocr.PanelDetector import PanelDetector
+from utils.resource import ResourceMonitor
+
 # Disable oneDNN/MKL-DNN before ANY paddle import.
 os.environ["FLAGS_use_mkldnn"] = "0"
 os.environ["PADDLE_DISABLE_ONEDNN"] = "1"
@@ -36,12 +39,14 @@ class PaddleOCREngine(EngineOCR):
 
     def __init__(
         self,
-        magi_model: AutoModel,
+        panel_detector: PanelDetector,
         debug: bool = False,
+        monitor: ResourceMonitor | None = None,
     ):
         super().__init__("PaddleOCR")
-        self.magi  = magi_model
+        self.panel_detector = panel_detector
         self.debug = debug
+        self.monitor = monitor
         if debug:
             logger.setLevel(logging.DEBUG)
 
@@ -95,8 +100,8 @@ class PaddleOCREngine(EngineOCR):
         # ── Detect panels on the FULL image once ─────────────────────────
         # Magi works much better on the complete page than on split halves.
         # We detect once here and pass pre-filtered panels to _run_single.
-        logger.debug("detecting panels with Magi on full image...")
-        all_panels = self._find_panel_dividers(img)
+        logger.debug("detecting panels...")
+        all_panels = self.panel_detector._find_panel_dividers(img)
         logger.info("panels found: %d", len(all_panels))
 
         split_x = self._detect_spread_split(img)
@@ -186,7 +191,7 @@ class PaddleOCREngine(EngineOCR):
         # Use pre-detected panels passed from run() — no redundant Magi call
         if panels is None:
             logger.debug("no panels passed — detecting with Magi as fallback...")
-            panels = self._find_panel_dividers(img)
+            panels = self.panel_detector._find_panel_dividers(img)
         logger.info("panels in use: %d", len(panels))
 
         panel_groups = self._group_rects_by_panel(rects, panels)
@@ -442,32 +447,6 @@ class PaddleOCREngine(EngineOCR):
         if low_score:
             logger.debug('discarded %d low-score detections (< %.2f)', low_score, self.MIN_SCORE)
         return boxes
-
-    def _find_panel_dividers(self, img: cv2.typing.MatLike) -> list[tuple]:
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_np  = np.array(Image.fromarray(img_rgb).convert("L").convert("RGB"))
-        with torch.no_grad():
-            results = self.magi.do_chapter_wide_prediction(
-                [img_np], {"images": [], "names": []}, use_tqdm=False, do_ocr=False
-            )
-        panels = results[0]["panels"]
-        panel_rects = [
-            (int(p[0]), int(p[1]), int(p[2] - p[0]), int(p[3] - p[1]))
-            for p in panels
-        ]
-        logger.debug("Magi raw panels: %d → %s", len(panel_rects), panel_rects)
-
-        def contains(outer, inner):
-            ox, oy, ow, oh = outer
-            ix, iy, iw, ih = inner
-            return ox <= ix and oy <= iy and ox + ow >= ix + iw and oy + oh >= iy + ih
-
-        panel_rects = [
-            p for i, p in enumerate(panel_rects)
-            if not any(contains(p, other) for j, other in enumerate(panel_rects) if i != j)
-        ]
-        logger.debug("Magi panels after filter: %d → %s", len(panel_rects), panel_rects)
-        return panel_rects
 
     def _group_rects_by_panel(
         self, rects: list[tuple], panels: list[tuple]

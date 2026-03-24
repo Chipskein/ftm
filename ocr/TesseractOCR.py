@@ -9,6 +9,7 @@ import torch
 from PIL import Image
 from transformers import AutoModel
 
+from ocr.PanelDetector import PanelDetector
 from utils.resource import ResourceMonitor
 from .EngineOCR import EngineOCR
 from .types.BubbleZone import BubbleZone
@@ -24,12 +25,12 @@ class TesseractOCR(EngineOCR):
 
     def __init__(
         self,
-        magi_model: AutoModel,
+        panel_detector: PanelDetector,
         debug: bool = False,
         monitor: ResourceMonitor | None = None,
     ):
         super().__init__("TesseractOCR")
-        self.magi    = magi_model
+        self.panel_detector = panel_detector
         self.debug   = debug
         self.monitor = monitor
         # PSM 11 — sparse text, best for manga's scattered layout
@@ -51,11 +52,6 @@ class TesseractOCR(EngineOCR):
         img_enhanced = self._sharpen(self._enhance_contrast_clahe(img_up))
         img_inv      = cv2.bitwise_not(img_enhanced)
         return {"up": img_up, "enhanced": img_enhanced, "inv": img_inv}
-
-    def release(self) -> None:
-        """Free GPU memory — call after OCR step, before translation."""
-        torch.cuda.empty_cache()
-        logger.debug("TesseractOCR: CUDA cache cleared")
 
     def run(self, img_path: str, output_dir: str) -> list[BubbleZone]:
         if not os.path.exists(img_path):
@@ -126,8 +122,8 @@ class TesseractOCR(EngineOCR):
         rects = self._detect_text_rects(img_path, enhanced_path, inv_path)
         logger.debug("raw text rects: %d", len(rects))
 
-        logger.debug("detecting panels with Magi...")
-        panels = self._find_panel_dividers(img)
+        logger.debug("detecting panels...")
+        panels = self.panel_detector._find_panel_dividers(img)
         logger.info("panels found: %d", len(panels))
 
         panel_groups = self._group_rects_by_panel(rects, panels)
@@ -256,31 +252,6 @@ class TesseractOCR(EngineOCR):
             logger.debug("discarded %d low-confidence detections (< %d)", low_conf, self.MIN_CONF)
         return boxes
 
-    def _find_panel_dividers(self, img: cv2.typing.MatLike) -> list[tuple]:
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_np  = np.array(Image.fromarray(img_rgb).convert("L").convert("RGB"))
-        with torch.no_grad():
-            results = self.magi.do_chapter_wide_prediction(
-                [img_np], {"images": [], "names": []}, use_tqdm=False, do_ocr=False
-            )
-        panels = results[0]["panels"]
-        panel_rects = [
-            (int(p[0]), int(p[1]), int(p[2] - p[0]), int(p[3] - p[1]))
-            for p in panels
-        ]
-        logger.debug("Magi raw panels: %d → %s", len(panel_rects), panel_rects)
-
-        def contains(outer, inner):
-            ox, oy, ow, oh = outer
-            ix, iy, iw, ih = inner
-            return ox <= ix and oy <= iy and ox + ow >= ix + iw and oy + oh >= iy + ih
-
-        panel_rects = [
-            p for i, p in enumerate(panel_rects)
-            if not any(contains(p, other) for j, other in enumerate(panel_rects) if i != j)
-        ]
-        logger.debug("Magi panels after filter: %d → %s", len(panel_rects), panel_rects)
-        return panel_rects
 
     def _group_rects_by_panel(
         self, rects: list[tuple], panels: list[tuple]

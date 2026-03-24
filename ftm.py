@@ -238,7 +238,7 @@ def main():
         total = time.perf_counter() - pipeline_start
         print(f"\n{'═' * 52}")
         print(f"  ✓ done in {total:.2f}s")
-        print(f"  image   → {output_path}")
+        print(f"  image translated  → {output_path}")
         print(f"  bubbles → {json_path}")
         print(f"{'═' * 52}\n")
 

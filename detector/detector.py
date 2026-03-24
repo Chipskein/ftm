@@ -10,21 +10,22 @@ def build_engine(
     monitor: ResourceMonitor | None = None,
 ) -> EngineOCR:
     
-    from ocr.PanelDetector import load_magi    
-    magi = load_magi()
+    from ocr.MagiPanelDetector import load_magi,MagiPanelDetector
+    model = load_magi()
+    panel_detector = MagiPanelDetector(magi_model=model)
 
     match engine_name:
         case "easy":
             from ocr.EazyOcr import EazyOCR
-            return EazyOCR(magi, debug)
+            return EazyOCR(panel_detector, debug, monitor)
         
         case "tesseract":
             from ocr.TesseractOCR import TesseractOCR
-            return TesseractOCR(magi, debug, monitor)
+            return TesseractOCR(panel_detector, debug, monitor)
         
         case "paddle":
             from ocr.PaddleOCREngine import PaddleOCREngine
-            return PaddleOCREngine(magi, debug)
+            return PaddleOCREngine(panel_detector, debug, monitor)
         
         case _:
             raise ValueError(

@@ -2,9 +2,6 @@ DEADLINE : Quinta-Feira 19:00
 TODO:
 
 
-[] PanelDetector -> 
-    revisar código do YOLO e Magi Deixar configuravel e refatorar EazyOCR,TesseractOCR,PaddleOCR para usar interface
-
 [] Refatorar EazyOCR,TesseractOCR,PaddleOCR para usar metodos compartihlados com EngineOCR
 
 [] Reimplementar EazyOCR de outro modo sem agrupar proximos tentar detectar paragrafos checar chats com Claude
