@@ -50,11 +50,20 @@ def run_translate(
     bubbles: list[dict],
     target_lang: str,
     model: str,
+    ollama_host: str = "http://localhost:11434",
+    ollama_model_temperature: float = 0,
     field_name: str = "translated_text",
     debug: bool = False,
 ) -> list[dict]:
+    
     from translator.OllamaTranslator import OllamaTranslator
-    translator = OllamaTranslator(source_lang="ja", model=model)
+    translator = OllamaTranslator(
+        source_lang="ja", 
+        model=model, 
+        ollama_host=ollama_host, 
+        ollama_model_temperature=ollama_model_temperature
+    )
+
     for i, bubble in enumerate(bubbles):
         translated = translator.translate(bubble["jp_text"], lang=target_lang)
         bubble[field_name] = translated
@@ -100,6 +109,14 @@ def parse_args() -> argparse.Namespace:
         choices=["translategemma:4b", "translategemma:12b"],
         help="Ollama model to use for translation (default: translategemma:4b)",
     )
+    parser.add_argument(
+        '--ollama-host', default='http://localhost:11434',
+        help='Custom host URL for Ollama API (default: http://localhost:11434)'
+    )
+    parser.add_argument(
+        '--ollama-model-temperature', default=0.0,
+        help='Temperature for option for model (default: 0.0)'
+    )
 
     return parser.parse_args()
 
@@ -138,6 +155,8 @@ def main():
     print(f"  bubbles_json: {args.bubbles_json}")
     print(f"  output: {output_path}")
     print(f"  tmp: {tmp_dir}")
+    print(f"  ollama_host: {args.ollama_host}")
+    print(f"  ollama_model_temperature: {args.ollama_model_temperature}")
     print(f"└── ")
 
     try:
@@ -174,7 +193,14 @@ def main():
         if "translation" in steps:
             bubbles = run_step(
                 label="Translate JP → EN",
-                fn=lambda: run_translate(bubbles, "en", args.translate_model, "en_text", debug),
+                fn=lambda: run_translate(
+                    bubbles, "en", 
+                    args.translate_model, 
+                    args.ollama_host,
+                    args.ollama_model_temperature,
+                    "en_text", 
+                    debug
+                ),
             )
 
             if args.translate_lang == "en":
@@ -185,7 +211,13 @@ def main():
                 bubbles = run_step(
                     label=f"Translate JP → {args.translate_lang.upper()}",
                     fn=lambda: run_translate(
-                        bubbles, args.translate_lang, args.translate_model, "translated_text", debug
+                        bubbles, 
+                        args.translate_lang, 
+                        args.translate_model, 
+                        args.ollama_host,
+                        args.ollama_model_temperature,
+                        "translated_text", 
+                        debug
                     ),
                 )
 

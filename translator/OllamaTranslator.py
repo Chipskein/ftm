@@ -1,18 +1,10 @@
-from ollama import chat, ResponseError
+from ollama import Client,chat, ResponseError
 
 
 LANG_NAMES: dict[str, str] = {
     "en": "English",
     "pt": "Portuguese",
-    "es": "Spanish",
-    "fr": "French",
-    "de": "German",
-    "zh": "Chinese",
-    "ko": "Korean",
-    "ja": "Japanese",
-    "it": "Italian",
-    "ru": "Russian",
-    "ar": "Arabic",
+    "ja": "Japanese"
 }
 
 MODEL = "translategemma:4b"
@@ -30,11 +22,19 @@ class OllamaTranslator:
         ollama pull translategemma:4b
     """
 
-    def __init__(self, source_lang: str = "ja", model: str = MODEL):
+    def __init__(
+            self, 
+            source_lang: str = "ja", 
+            model: str = MODEL, 
+            ollama_host: str = "http://localhost:11434",
+            ollama_model_temperature: float = 0.0
+        ):
         """
         Args:
             source_lang : source language code (e.g. 'ja', 'en')
             model       : Ollama model name (default: translategemma:4b)
+            ollama_host : Host URL for Ollama API (default: http://localhost:11434)
+            ollama_model_temperature : Temperature for Ollama model (default: 0.0)
         """
         if source_lang not in LANG_NAMES:
             raise ValueError(
@@ -50,7 +50,12 @@ class OllamaTranslator:
         self.source_lang = source_lang
         self.source_name = LANG_NAMES[source_lang]
         self.model = model
-
+        self.ollama_host = ollama_host
+        self.ollama_model_temperature = float(ollama_model_temperature)
+        self._ollama_client = Client(
+            host=self.ollama_host
+        )
+        
     def translate(self, text: str, lang: str) -> str:
         """
         Translate text from source_lang to the target language.
@@ -85,9 +90,11 @@ class OllamaTranslator:
         )
 
         try:
-            response = chat(
+            response = self._ollama_client.chat(
                 model=self.model,
+                stream=False,
                 messages=[{"role": "user", "content": prompt}],
+                options={ "temperature": self.ollama_model_temperature }
             )
             return response.message.content.strip()
         except ResponseError as e:

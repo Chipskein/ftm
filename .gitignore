@@ -5,3 +5,6 @@ venv
 tmp*
 __pycache__
 images-teste*
+*.png
+*.jpg
+*.jpeg

@@ -1,7 +1,6 @@
 DEADLINE : Quinta-Feira 19:00
 TODO:
 
-[] Estudar melhor as implementações
 
 [] PanelDetector -> 
     revisar código do YOLO e Magi Deixar configuravel e refatorar EazyOCR,TesseractOCR,PaddleOCR para usar interface
@@ -10,12 +9,10 @@ TODO:
 
 [] Reimplementar EazyOCR de outro modo sem agrupar proximos tentar detectar paragrafos checar chats com Claude
 
-[] Translate ->
-    Adicionar Flag para alterar OLLAMA_URL
-
 [] TypeSetting -> 
     Implementar background transparente com blur ao invés do branco
 
+[] Estudar melhor as implementações
 
 Por ultimo
 [] Comparar Resultados de detecção tabelados para o dataset
