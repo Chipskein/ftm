@@ -160,19 +160,19 @@ def main():
     print(f"└── ")
 
     try:
-        bboxs = []
+        bubbles = []
         if "detection" in steps and args.bubbles_json is None:
-            bboxs = run_step(
+            bubbles = run_step(
                 label="Detect speech bubbles",
                 fn=lambda: detect(image_path, engine, debug, tmp_dir, monitor),
             )
 
-        bubbles = []
+        
         if "refinement" in steps and args.bubbles_json is None:
             from ocr.BubbleRefiner import BubbleRefiner
             bubbles = run_step(
                 label="Refine bubble crops",
-                fn=lambda: BubbleRefiner(debug=debug).refine(bboxs),
+                fn=lambda: BubbleRefiner(debug=debug).refine(bubbles),
             )
 
         if args.bubbles_json:

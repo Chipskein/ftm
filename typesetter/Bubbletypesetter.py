@@ -2,6 +2,8 @@ import os
 import textwrap
 from PIL import Image, ImageDraw, ImageFont
 from ocr.types.BubbleZone import BubbleZone
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import numpy as np
 import re
 
 class BubbleTypesetter:
@@ -42,6 +44,58 @@ class BubbleTypesetter:
         ratio = poly_area / bbox_area
         return ratio >= self.MIN_COVERAGE_RATIO
 
+    def _get_region_brightness(self, img: Image.Image, x, y, w, h) -> float:
+        """Returns 0.0 (black) to 255.0 (white) average brightness of a region."""
+        crop = img.crop((x, y, x + w, y + h)).convert("L")
+        pixels = list(crop.getdata())
+        return sum(pixels) / len(pixels)
+    
+    def _blur_region(self, img: Image.Image, mask: Image.Image,
+        tint_color: tuple = (255, 255, 255),
+        blur_radius: int = 8, tint_alpha: int = 180) -> None:
+        blurred = img.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+        img.paste(blurred, mask=mask)
+        if tint_alpha > 0:
+            scaled_mask = mask.point(lambda p: p * tint_alpha // 255)
+            tint = Image.new("RGB", img.size, tint_color)
+            img.paste(tint, mask=scaled_mask)
+
+    def _sample_border_color(self, img: Image.Image, x, y, w, h, sample_px=6) -> tuple:
+        """
+        Samples pixels just outside the bubble bbox to get the true background color.
+        Returns (r, g, b).
+        """
+        arr = np.array(img)
+        H, W = arr.shape[:2]
+
+        # Define a border ring just outside the bbox
+        x0 = max(0,   x - sample_px)
+        y0 = max(0,   y - sample_px)
+        x1 = min(W,   x + w + sample_px)
+        y1 = min(H,   y + h + sample_px)
+
+        # Collect pixels in the outer ring, excluding the inner bbox
+        samples = []
+        for row in range(y0, y1):
+            for col in range(x0, x1):
+                if row < y or row > y + h or col < x or col > x + w:
+                    samples.append(arr[row, col, :3])
+
+        if not samples:
+            return (255, 255, 255)
+
+        avg = np.mean(samples, axis=0).astype(int)
+        return (int(avg[0]), int(avg[1]), int(avg[2]))
+
+    def _contrast_color(self, bg: tuple) -> tuple:
+        """
+        Returns black or white depending on which contrasts more with bg.
+        Uses WCAG relative luminance formula.
+        """
+        r, g, b = [c / 255.0 for c in bg]
+        luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        return (0, 0, 0) if luminance > 0.5 else (255, 255, 255)
+
     def typeset(
         self,
         img_path: str,
@@ -77,39 +131,42 @@ class BubbleTypesetter:
     # Drawing                                                              #
     # ------------------------------------------------------------------ #
 
-    def _draw_polygon_bubble(
-        self,
-        img: Image.Image,
-        page_poly: list[tuple[int, int]],
-        x: int, y: int, w: int, h: int,
-        text: str,
-    ) -> None:
-        """Fill polygon + original bbox, then draw text using bbox dims."""
-        draw = ImageDraw.Draw(img)
-        draw.polygon(page_poly, fill=self.FILL_COLOR)
-        # Use the original bbox (x, y, w, h) for both erasing and text layout.
-        # The polygon page-bbox is narrower than the original bbox which causes
-        # text overflow; the original bbox correctly constrains line width (w)
-        # while providing full height (h) for multi-line wrapping.
-        draw.rectangle([x, y, x + w, y + h], fill=self.FILL_COLOR)
-        self._draw_text(draw, text, x, y, w, h)
+    def _draw_polygon_bubble(self, img, page_poly, x, y, w, h, text):
+        bg_color  = self._sample_border_color(img, x, y, w, h)
+        text_color = self._contrast_color(bg_color)
 
-    def _draw_rect_bubble(
-        self,
-        img: Image.Image,
-        x: int, y: int, w: int, h: int,
-        text: str,
-    ) -> None:
+        mask = Image.new("L", img.size, 0)
+        mask_draw = ImageDraw.Draw(mask)
+        mask_draw.polygon(page_poly, fill=255)
+        mask_draw.rectangle([x, y, x + w, y + h], fill=255)
+
+        self._blur_region(img, mask, bg_color)
+
         draw = ImageDraw.Draw(img)
-        draw.rectangle([x, y, x + w, y + h], fill=self.FILL_COLOR)
-        self._draw_text(draw, text, x, y, w, h)
+        self._draw_text(draw, text, x, y, w, h, text_color)
+
+    
+    def _draw_rect_bubble(self, img, x, y, w, h, text):
+        bg_color   = self._sample_border_color(img, x, y, w, h)
+        text_color = self._contrast_color(bg_color)
+
+        mask = Image.new("L", img.size, 0)
+        mask_draw = ImageDraw.Draw(mask)
+        mask_draw.rectangle([x, y, x + w, y + h], fill=255)
+
+        self._blur_region(img, mask, bg_color)
+
+        draw = ImageDraw.Draw(img)
+        self._draw_text(draw, text, x, y, w, h, text_color)
 
     def _draw_text(
         self,
         draw: ImageDraw.ImageDraw,
         text: str,
         rx: int, ry: int, rw: int, rh: int,
+        text_color=None
     ) -> None:
+        color = text_color if text_color is not None else self.TEXT_COLOR
         inner_w = rw - self.PADDING * 2
         inner_h = rh - self.PADDING * 2
         if inner_w <= 0 or inner_h <= 0:
@@ -123,7 +180,7 @@ class BubbleTypesetter:
         tx = rx + self.PADDING + max(0, (inner_w - text_w) // 2)
         ty = ry + self.PADDING + max(0, (inner_h - text_h) // 2)
 
-        draw.text((tx, ty), wrapped, font=font, fill=self.TEXT_COLOR)
+        draw.text((tx, ty), wrapped, font=font, fill=color)
 
     # ------------------------------------------------------------------ #
     # Coordinate transform                                                 #
