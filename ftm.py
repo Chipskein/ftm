@@ -92,8 +92,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--steps", dest="steps", nargs="+",
-        choices=["detection", "refinement", "ocr", "translation", "typesetting"],
-        default=["detection", "refinement", "ocr", "translation", "typesetting"],
+        choices=["detection", "refinement", "extraction", "translation", "typesetting"],
+        default=["detection", "extraction", "translation", "typesetting"],
         help="Run specific steps of the pipeline",
     )
     parser.add_argument(
@@ -184,9 +184,9 @@ def main():
             print("\n⚠  No bubbles to process. Exiting.")
             return
 
-        if "ocr" in steps:
+        if "extraction" in steps:
             bubbles = run_step(
-                label="OCR — extract Japanese text",
+                label="Extraction — extract Japanese text",
                 fn=lambda: run_ocr(bubbles, debug),
             )
 
