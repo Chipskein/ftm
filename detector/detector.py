@@ -10,9 +10,11 @@ def build_engine(
     monitor: ResourceMonitor | None = None,
 ) -> EngineOCR:
     
-    from ocr.MagiPanelDetector import load_magi,MagiPanelDetector
-    model = load_magi()
-    panel_detector = MagiPanelDetector(magi_model=model)
+    #from ocr.MagiPanelDetector import load_magi,MagiPanelDetector
+    #model = load_magi()
+    #MagiPanelDetector(magi_model=model)
+    from ocr.YOLOPanelDetector import YOLOPanelDetector
+    panel_detector = YOLOPanelDetector("./ocr/panel_detector_model.pt")
 
     match engine_name:
         case "easy":

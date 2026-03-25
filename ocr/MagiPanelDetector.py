@@ -68,11 +68,6 @@ class MagiPanelDetector(PanelDetector):
         ]
         logger.debug("Magi raw panels: %d → %s", len(panel_rects), panel_rects)
 
-        def contains(outer, inner):
-            ox, oy, ow, oh = outer
-            ix, iy, iw, ih = inner
-            return ox <= ix and oy <= iy and ox + ow >= ix + iw and oy + oh >= iy + ih
-
         panel_rects = [
             p for i, p in enumerate(panel_rects)
             if not any(self._contains(p, other) for j, other in enumerate(panel_rects) if i != j)
