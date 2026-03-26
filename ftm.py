@@ -192,34 +192,17 @@ def main():
 
         if "translation" in steps:
             bubbles = run_step(
-                label="Translate JP → EN",
+                label=f"Translate JP → {args.translate_lang.upper()}",
                 fn=lambda: run_translate(
-                    bubbles, "en", 
+                    bubbles, 
+                    args.translate_lang, 
                     args.translate_model, 
                     args.ollama_host,
                     args.ollama_model_temperature,
-                    "en_text", 
+                    "translated_text", 
                     debug
                 ),
             )
-
-            if args.translate_lang == "en":
-                print("\n⚠  --translate-lang is 'en'. Using EN as final output.")
-                for bubble in bubbles:
-                    bubble["translated_text"] = bubble["en_text"]
-            else:
-                bubbles = run_step(
-                    label=f"Translate JP → {args.translate_lang.upper()}",
-                    fn=lambda: run_translate(
-                        bubbles, 
-                        args.translate_lang, 
-                        args.translate_model, 
-                        args.ollama_host,
-                        args.ollama_model_temperature,
-                        "translated_text", 
-                        debug
-                    ),
-                )
 
         if "typesetting" in steps:
             run_step(
