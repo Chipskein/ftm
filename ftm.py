@@ -92,8 +92,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--steps", dest="steps", nargs="+",
-        choices=["detection", "refinement", "ocr", "translation", "typesetting"],
-        default=["detection", "refinement", "ocr", "translation", "typesetting"],
+        choices=["detection", "refinement", "extraction", "translation", "typesetting"],
+        default=["detection", "extraction", "translation", "typesetting"],
         help="Run specific steps of the pipeline",
     )
     parser.add_argument(
@@ -184,42 +184,25 @@ def main():
             print("\n⚠  No bubbles to process. Exiting.")
             return
 
-        if "ocr" in steps:
+        if "extraction" in steps:
             bubbles = run_step(
-                label="OCR — extract Japanese text",
+                label="Extraction — extract Japanese text",
                 fn=lambda: run_ocr(bubbles, debug),
             )
 
         if "translation" in steps:
             bubbles = run_step(
-                label="Translate JP → EN",
+                label=f"Translate JP → {args.translate_lang.upper()}",
                 fn=lambda: run_translate(
-                    bubbles, "en", 
+                    bubbles, 
+                    args.translate_lang, 
                     args.translate_model, 
                     args.ollama_host,
                     args.ollama_model_temperature,
-                    "en_text", 
+                    "translated_text", 
                     debug
                 ),
             )
-
-            if args.translate_lang == "en":
-                print("\n⚠  --translate-lang is 'en'. Using EN as final output.")
-                for bubble in bubbles:
-                    bubble["translated_text"] = bubble["en_text"]
-            else:
-                bubbles = run_step(
-                    label=f"Translate JP → {args.translate_lang.upper()}",
-                    fn=lambda: run_translate(
-                        bubbles, 
-                        args.translate_lang, 
-                        args.translate_model, 
-                        args.ollama_host,
-                        args.ollama_model_temperature,
-                        "translated_text", 
-                        debug
-                    ),
-                )
 
         if "typesetting" in steps:
             run_step(

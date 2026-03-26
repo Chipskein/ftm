@@ -1,10 +1,9 @@
 DEADLINE : Quinta-Feira 19:00
 TODO:
 
-
 [] Refatorar EazyOCR,TesseractOCR,PaddleOCR para usar metodos compartihlados com EngineOCR
 
-[] Reimplementar EazyOCR de outro modo sem agrupar proximos tentar detectar paragrafos checar chats com Claude
+[] Testar metodo de agrupamento
 
 [] Estudar melhor as implementações
 
