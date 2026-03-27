@@ -1,0 +1,289 @@
+[
+  {
+    "tipo": "face",
+    "xmin": "1071",
+    "ymin": "687",
+    "xmax": "1112",
+    "ymax": "719"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "480",
+    "ymin": "700",
+    "xmax": "746",
+    "ymax": "1111"
+  },
+  {
+    "tipo": "text",
+    "xmin": "664",
+    "ymin": "458",
+    "xmax": "722",
+    "ymax": "676"
+  },
+  {
+    "tipo": "body",
+    "xmin": "978",
+    "ymin": "167",
+    "xmax": "1198",
+    "ymax": "496"
+  },
+  {
+    "tipo": "face",
+    "xmin": "254",
+    "ymin": "200",
+    "xmax": "306",
+    "ymax": "267"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "902",
+    "ymin": "550",
+    "xmax": "1261",
+    "ymax": "846"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "1113",
+    "ymin": "862",
+    "xmax": "1265",
+    "ymax": "1107"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "136",
+    "ymin": "850",
+    "xmax": "408",
+    "ymax": "1053"
+  },
+  {
+    "tipo": "text",
+    "xmin": "384",
+    "ymin": "62",
+    "xmax": "446",
+    "ymax": "172"
+  },
+  {
+    "tipo": "face",
+    "xmin": "1028",
+    "ymin": "263",
+    "xmax": "1138",
+    "ymax": "361"
+  },
+  {
+    "tipo": "body",
+    "xmin": "1055",
+    "ymin": "639",
+    "xmax": "1199",
+    "ymax": "838"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "900",
+    "ymin": "860",
+    "xmax": "1099",
+    "ymax": "1107"
+  },
+  {
+    "tipo": "body",
+    "xmin": "120",
+    "ymin": "144",
+    "xmax": "500",
+    "ymax": "421"
+  },
+  {
+    "tipo": "text",
+    "xmin": "1488",
+    "ymin": "104",
+    "xmax": "1554",
+    "ymax": "206"
+  },
+  {
+    "tipo": "text",
+    "xmin": "1144",
+    "ymin": "561",
+    "xmax": "1263",
+    "ymax": "677"
+  },
+  {
+    "tipo": "text",
+    "xmin": "1222",
+    "ymin": "871",
+    "xmax": "1260",
+    "ymax": "947"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "512",
+    "ymin": "3",
+    "xmax": "749",
+    "ymax": "410"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "940",
+    "ymin": "121",
+    "xmax": "1225",
+    "ymax": "499"
+  },
+  {
+    "tipo": "text",
+    "xmin": "499",
+    "ymin": "729",
+    "xmax": "734",
+    "ymax": "848"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "69",
+    "ymin": "428",
+    "xmax": "746",
+    "ymax": "715"
+  },
+  {
+    "tipo": "body",
+    "xmin": "368",
+    "ymin": "432",
+    "xmax": "573",
+    "ymax": "696"
+  },
+  {
+    "tipo": "body",
+    "xmin": "236",
+    "ymin": "930",
+    "xmax": "331",
+    "ymax": "1028"
+  },
+  {
+    "tipo": "text",
+    "xmin": "1345",
+    "ymin": "315",
+    "xmax": "1386",
+    "ymax": "506"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "69",
+    "ymin": "719",
+    "xmax": "476",
+    "ymax": "842"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "1285",
+    "ymin": "1",
+    "xmax": "1401",
+    "ymax": "1164"
+  },
+  {
+    "tipo": "text",
+    "xmin": "1131",
+    "ymin": "866",
+    "xmax": "1178",
+    "ymax": "1006"
+  },
+  {
+    "tipo": "body",
+    "xmin": "482",
+    "ymin": "871",
+    "xmax": "596",
+    "ymax": "1103"
+  },
+  {
+    "tipo": "face",
+    "xmin": "435",
+    "ymin": "497",
+    "xmax": "520",
+    "ymax": "571"
+  },
+  {
+    "tipo": "text",
+    "xmin": "918",
+    "ymin": "559",
+    "xmax": "991",
+    "ymax": "676"
+  },
+  {
+    "tipo": "text",
+    "xmin": "1068",
+    "ymin": "869",
+    "xmax": "1081",
+    "ymax": "931"
+  },
+  {
+    "tipo": "face",
+    "xmin": "533",
+    "ymin": "908",
+    "xmax": "574",
+    "ymax": "984"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "1408",
+    "ymin": "0",
+    "xmax": "1592",
+    "ymax": "1169"
+  },
+  {
+    "tipo": "text",
+    "xmin": "481",
+    "ymin": "1002",
+    "xmax": "569",
+    "ymax": "1100"
+  },
+  {
+    "tipo": "text",
+    "xmin": "557",
+    "ymin": "93",
+    "xmax": "654",
+    "ymax": "161"
+  },
+  {
+    "tipo": "text",
+    "xmin": "1421",
+    "ymin": "547",
+    "xmax": "1486",
+    "ymax": "634"
+  },
+  {
+    "tipo": "text",
+    "xmin": "244",
+    "ymin": "717",
+    "xmax": "286",
+    "ymax": "804"
+  },
+  {
+    "tipo": "face",
+    "xmin": "657",
+    "ymin": "927",
+    "xmax": "679",
+    "ymax": "947"
+  },
+  {
+    "tipo": "text",
+    "xmin": "1158",
+    "ymin": "71",
+    "xmax": "1275",
+    "ymax": "396"
+  },
+  {
+    "tipo": "body",
+    "xmin": "1012",
+    "ymin": "986",
+    "xmax": "1083",
+    "ymax": "1075"
+  },
+  {
+    "tipo": "frame",
+    "xmin": "61",
+    "ymin": "0",
+    "xmax": "563",
+    "ymax": "416"
+  },
+  {
+    "tipo": "body",
+    "xmin": "613",
+    "ymin": "921",
+    "xmax": "692",
+    "ymax": "1027"
+  }
+]

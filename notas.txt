@@ -1,0 +1,44 @@
+TESTES
+
+* Adicionar suporte a cbz,cbr
+
+Tabela:
+
+Testar no GTX 3060(12gb)
+
+Testar no CPU e GPU mx250(2gb)
+
+Testar no CPU sem GPU
+
+Montar Dataset comparando os motores(easy,paddle,tesseract)
+
+Treinar modelo yolo para detecção de texto
+
+Treinar modelo yolo para classificação de tipos de texto(narrativo,onomatopeia,fala)
+
+Deteccao:
+    X - Quantidade de retangulos
+    Y - Tamanho do retangulo(area)
+    Z - Tempo
+
+    Agrupamento:
+        X - Quantidade de retangulos antes do agrupamento
+        Y - Quantidade de retangulos depois
+        Z - Tempo
+    
+
+Extracao (MangaOCR)
+    X - Quantidade de ideogramas
+    Y - Tempo
+
+Traducao
+    X - Quantidade de ideogramas
+    Y - Tempo
+
+Typesetting
+    X - Quantidade de caracteres
+    Y - Tempo
+
+
+Ver com o Borges sobre o tradutor
+    * 

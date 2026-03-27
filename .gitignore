@@ -9,3 +9,4 @@ images-teste*
 *.jpg
 *.jpeg
 *.json
+!teste.json
