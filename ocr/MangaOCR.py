@@ -23,7 +23,7 @@ class MangaOCREngine:
 
     def _load(self):
         if self._model is None:
-            self._model = MangaOcr()
+            self._model = MangaOcr(force_cpu=self.use_cpu)
 
     def _is_junk(self, text: str) -> bool:
         """Return True if OCR output is noise with no real content."""

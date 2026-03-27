@@ -19,7 +19,7 @@ def build_engine(
     match engine_name:
         case "easy":
             from ocr.EazyOcr import EazyOCR
-            return EazyOCR(panel_detector, debug, monitor)
+            return EazyOCR(panel_detector, debug, monitor,True)
         
         case "tesseract":
             from ocr.TesseractOCR import TesseractOCR
