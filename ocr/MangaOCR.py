@@ -1,8 +1,6 @@
 import time
 import re
-import cv2
 from manga_ocr import MangaOcr
-import numpy as np
 
 class MangaOCREngine:
     name = "MangaOCR"
@@ -18,8 +16,9 @@ class MangaOCREngine:
         r'^そういえば、$',                         # common OCR misread of そういえば、'
     ]
 
-    def __init__(self):
+    def __init__(self,use_cpu: bool = False):
         self._model: MangaOcr | None = None
+        self.use_cpu = use_cpu
 
     def _load(self):
         if self._model is None:

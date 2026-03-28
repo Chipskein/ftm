@@ -27,7 +27,8 @@ class EazyOCR(EngineOCR):
         self.panel_detector = panel_detector
         self.monitor = monitor
         self.debug = debug
-        use_gpu = torch.cuda.is_available() and not use_cpu
+        self.use_cpu = use_cpu
+        use_gpu = (not use_cpu) and torch.cuda.is_available()
         self.reader = easyocr.Reader(["ja"], gpu=use_gpu)
         self.reader_cfg = dict(
             detail=1, text_threshold=0.2, link_threshold=0.1,

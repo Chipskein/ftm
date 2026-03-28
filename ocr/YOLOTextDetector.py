@@ -37,6 +37,7 @@ class YOLOTextDetector(EngineOCR):
         imgsz: int = 1024,
         debug: bool = False,
         monitor: ResourceMonitor | None = None,
+        use_cpu: bool = False,
     ):
         super().__init__("YOLOTextDetector")
         self.panel_detector = panel_detector
@@ -44,8 +45,9 @@ class YOLOTextDetector(EngineOCR):
         self.imgsz          = imgsz
         self.monitor        = monitor
         self.debug          = debug
+        self.use_cpu        = use_cpu
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "cuda" if torch.cuda.is_available() and not use_cpu else "cpu"
         self.model = YOLO(model_path)
         self.model.to(device)
 
