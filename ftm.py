@@ -76,7 +76,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="FTM")
 
     parser.add_argument(
-        "--engine", default="easy", choices=["easy", "tesseract", "paddle"],
+        "--engine", default="easy", choices=["yolo","easy", "tesseract", "paddle"],
         help="OCR engine to use during detection step",
     )
     parser.add_argument("--image", required=True, help="Path to input image")

@@ -1,0 +1,40 @@
+* Ver com o Borges sobre o tradutor
+* Falar com os possiveis clientes(ver no zap)
+    
+TODO:
+    * Refactor
+
+    * Testar no GTX 3060(12gb)
+
+    * Testar no CPU e GPU mx250(2gb)
+
+    * Testar no CPU sem GPU
+
+    Para cada tipo
+
+        Montar Dataset comparando os motores(easy,paddle,tesseract,yolo)
+
+        Deteccao(YOLO,EasyOCR,paddleOCR,Tesseract):
+            X - Quantidade de retangulos
+            Y - Tamanho do retangulo(area)
+            Z - Tempo
+
+            Agrupamento(EasyOCR,paddleOCR,Tesseract):
+                X - Quantidade de retangulos antes do agrupamento
+                Y - Quantidade de retangulos depois
+                Z - Tempo
+            
+
+        Extracao (MangaOCR)
+            X - Quantidade de ideogramas
+            Y - Tempo
+
+        Traducao(translategemma,gemma3,gemma2)
+            X - Quantidade de ideogramas
+            Y - Tempo
+
+        Typesetting
+            X - Quantidade de caracteres
+            Y - Tempo
+
+    * Extrair Texto e mandar para o tradutor para verificar acuracia

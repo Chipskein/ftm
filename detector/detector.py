@@ -10,9 +10,6 @@ def build_engine(
     monitor: ResourceMonitor | None = None,
 ) -> EngineOCR:
     
-    #from ocr.MagiPanelDetector import load_magi,MagiPanelDetector
-    #model = load_magi()
-    #MagiPanelDetector(magi_model=model)
     from ocr.YOLOPanelDetector import YOLOPanelDetector
     panel_detector = YOLOPanelDetector("./ocr/panel_detector_model.pt")
 
@@ -28,6 +25,10 @@ def build_engine(
         case "paddle":
             from ocr.PaddleOCREngine import PaddleOCREngine
             return PaddleOCREngine(panel_detector, debug, monitor)
+        
+        case "yolo":
+            from ocr.YOLOTextDetector import YOLOTextDetector
+            return YOLOTextDetector("/home/chipskein/Source/chipskein/tcc/ftm/yolo/runs/segment/manga_full_train/87_books_run/weights/best.pt", panel_detector, debug, monitor)
         
         case _:
             raise ValueError(
