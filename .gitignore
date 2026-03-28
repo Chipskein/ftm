@@ -10,3 +10,4 @@ images-teste*
 *.jpeg
 *.json
 !teste.json
+yolo
