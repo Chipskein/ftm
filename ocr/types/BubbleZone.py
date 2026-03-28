@@ -9,6 +9,4 @@ class BubbleZone(TypedDict, total=False):
     h:               int
     crop:            str
     jp_text:         str
-    en_text:         str
     translated_text: str
-    polygon:         list[list[int]]  # [[x, y], ...] in crop-local coordinates

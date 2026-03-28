@@ -73,10 +73,10 @@ def run_translate(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="FTM")
+    parser = argparse.ArgumentParser(description="FTM - Ferramenta de Tradução de Mangás - A modular manga translation pipeline")
 
     parser.add_argument(
-        "--engine", default="easy", choices=["yolo","easy", "tesseract", "paddle"],
+        "--engine", default="yolo", choices=["yolo","easy", "tesseract", "paddle"],
         help="OCR engine to use during detection step",
     )
 
@@ -97,7 +97,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--steps", dest="steps", nargs="+",
-        choices=["detection", "refinement", "extraction", "translation", "typesetting"],
+        choices=["detection", "extraction", "translation", "typesetting"],
         default=["detection", "extraction", "translation", "typesetting"],
         help="Run specific steps of the pipeline (default: all steps: detection, extraction, translation, typesetting)",
     )
