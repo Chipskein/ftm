@@ -21,19 +21,22 @@ class EazyOCR(EngineOCR):
             panel_detector: PanelDetector,
             debug: bool = False,
             monitor: ResourceMonitor | None = None,
+            use_cpu: bool = False
     ):
         super().__init__("EazyOCR")
         self.panel_detector = panel_detector
         self.monitor = monitor
         self.debug = debug
-        self.reader = easyocr.Reader(["ja"], gpu=torch.cuda.is_available())
+        self.use_cpu = use_cpu
+        use_gpu = (not use_cpu) and torch.cuda.is_available()
+        self.reader = easyocr.Reader(["ja"], gpu=use_gpu)
         self.reader_cfg = dict(
             detail=1, text_threshold=0.2, link_threshold=0.1,
             low_text=0.2, contrast_ths=0.05, adjust_contrast=0.5,
         )
         if debug:
             logger.setLevel(logging.DEBUG)
-        logger.debug("EazyOCR initialised (gpu=%s)", torch.cuda.is_available())
+        logger.debug("EazyOCR initialised (gpu=%s)", use_gpu)
         logger.debug("EasyOCR config: %s", self.reader_cfg)
         logger.debug("Panel detector: %s", self.panel_detector.__class__.__name__)
 

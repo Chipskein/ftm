@@ -17,6 +17,7 @@ class YOLOPanelDetector(PanelDetector):
         confidence: float = 0.25,
         iou: float = 0.45,
         imgsz: int = 1024,
+        use_cpu: bool = False
     ):
         from ultralytics import YOLO
 
@@ -24,6 +25,11 @@ class YOLOPanelDetector(PanelDetector):
         self.iou = iou
         self.imgsz = imgsz
         self._model = YOLO(str(model_path))
+        if use_cpu:
+            self._device = "CPU"
+        else:
+            self._device = None
+
 
     def _find_panel_dividers(self, img: np.ndarray) -> list[tuple]:
         results = self._model(
@@ -32,6 +38,7 @@ class YOLOPanelDetector(PanelDetector):
             iou=self.iou,
             imgsz=self.imgsz,
             verbose=False,
+            device=self._device
         )[0]
 
         panels = []
