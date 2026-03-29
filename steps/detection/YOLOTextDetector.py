@@ -9,6 +9,7 @@ from .EngineOCR import EngineOCR
 from dto.BubbleZone import BubbleZone
 from .panel.PanelDetector import PanelDetector
 from profiler.ResourceMonitor import ResourceMonitor
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -160,22 +161,47 @@ class YOLOTextDetector(EngineOCR):
         if not detections:
             return []
 
-        detections = sorted(detections, key=lambda d: d["bbox"][2] * d["bbox"][3])
+        # Extrai bboxes [x, y, w, h] em array contíguo float32
+        boxes = np.array([d["bbox"] for d in detections], dtype=np.float32)
 
-        kept = []
-        suppressed = set()
+        # Converte para [x1, y1, x2, y2] para facilitar cálculo de interseção
+        x1 = boxes[:, 0]
+        y1 = boxes[:, 1]
+        x2 = boxes[:, 0] + boxes[:, 2]
+        y2 = boxes[:, 1] + boxes[:, 3]
+        areas = boxes[:, 2] * boxes[:, 3]
 
-        for i, det_i in enumerate(detections):
-            if i in suppressed:
-                continue
-            kept.append(det_i)
-            for j, det_j in enumerate(detections):
-                if j <= i or j in suppressed:
-                    continue
-                if self._iou(det_i["bbox"], det_j["bbox"]) > iou_threshold:
-                    suppressed.add(j)
+        # Ordena do menor para o maior (índices originais)
+        order = np.argsort(areas)
 
-        return kept
+        kept_indices = []
+
+        while order.size > 0:
+            i = order[0]
+            kept_indices.append(i)
+
+            if order.size == 1:
+                break
+
+            rest = order[1:]
+
+            # Calcula interseção vetorizada entre box i e todos os restantes
+            ix1 = np.maximum(x1[i], x1[rest])
+            iy1 = np.maximum(y1[i], y1[rest])
+            ix2 = np.minimum(x2[i], x2[rest])
+            iy2 = np.minimum(y2[i], y2[rest])
+
+            inter_w = np.maximum(0.0, ix2 - ix1)
+            inter_h = np.maximum(0.0, iy2 - iy1)
+            inter   = inter_w * inter_h
+
+            union = areas[i] + areas[rest] - inter
+            iou   = inter / np.where(union > 0, union, 1e-6)
+
+            # Mantém apenas os que não têm sobreposição excessiva com i
+            order = rest[iou <= iou_threshold]
+
+        return [detections[i] for i in kept_indices]
 
     def _draw_detections(
         self, img: cv2.typing.MatLike, detections: list[dict]
