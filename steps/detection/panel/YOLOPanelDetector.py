@@ -1,6 +1,6 @@
 from pathlib import Path
 import numpy as np
-from ocr.PanelDetector import PanelDetector
+from .PanelDetector import PanelDetector
 
 class YOLOPanelDetector(PanelDetector):
     """

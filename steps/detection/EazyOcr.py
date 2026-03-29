@@ -8,9 +8,9 @@ import numpy as np
 import torch
 
 from .EngineOCR import EngineOCR
-from .types.BubbleZone import BubbleZone
-from utils.resource import ResourceMonitor
-from ocr.PanelDetector import PanelDetector
+from dto.BubbleZone import BubbleZone
+from profiler.ResourceMonitor import ResourceMonitor
+from .panel.PanelDetector import PanelDetector
 
 logger = logging.getLogger(__name__)
 
@@ -40,20 +40,6 @@ class EazyOCR(EngineOCR):
         logger.debug("EasyOCR config: %s", self.reader_cfg)
         logger.debug("Panel detector: %s", self.panel_detector.__class__.__name__)
 
-    # ------------------------------------------------------------------ #
-    # Abstract method implementations                                      #
-    # ------------------------------------------------------------------ #
-
-    def loadImage(self, image_path: str) -> cv2.typing.MatLike:
-        return cv2.imread(image_path)
-
-    def preProcessImage(self, image: cv2.typing.MatLike) -> dict:
-        """Returns a dict with upscaled, enhanced, and inverted variants."""
-        img_up = self._upscale(image, scale=2)
-        img_enhanced = self._sharpen(self._enhance_contrast_clahe(img_up))
-        img_inv = cv2.bitwise_not(img_enhanced)
-        return {"up": img_up, "enhanced": img_enhanced, "inv": img_inv}
-
     def run(self, img_path: str, output_dir: str) -> list[BubbleZone]:
         if not os.path.exists(img_path):
             logger.error("image not found: %s", img_path)
@@ -63,22 +49,9 @@ class EazyOCR(EngineOCR):
         h, w = img.shape[:2]
         logger.info("processing image %s (%dx%d)", os.path.basename(img_path), w, h)
 
-        quality = self._assess_quality(img)
-        logger.info(
-            "quality — sharpness=%.1f  contrast=%.1f  resolution=%dpx",
-            quality["sharpness"], quality["contrast"], quality["resolution"],
-        )
-        if quality["low_res"]:
-            logger.warning("low resolution (%dpx short side) — OCR quality may suffer",
-                           quality["resolution"])
-        if quality["needs_contrast"]:
-            logger.info("contrast low (%.1f) — applying CLAHE", quality["contrast"])
-            img = self._enhance_contrast_clahe(img)
-        if quality["needs_sharpen"]:
-            logger.info("sharpness low (%.1f) — applying unsharp mask", quality["sharpness"])
-            img = self._sharpen(img)
+        img = self.assess_and_fix_quality(img)
 
-        split_x = self._detect_spread_split(img)
+        split_x = self.detect_spread_split(img)
         if split_x is not None:
             logger.debug("spread detected — split at x=%d", split_x)
             left  = img[:, :split_x]
@@ -245,7 +218,7 @@ class EazyOCR(EngineOCR):
                 x, y, w, h = x1, y1, x2 - x1, y2 - y1
 
                 bubble_id = id_offset + len(results) + 1
-                crop_path = self._crop_bubble(
+                crop_path = self.crop_bubble(
                     img, x, y, w, h, crops_dir, base_name, bubble_id
                 )
                 if crop_path is None:
@@ -287,30 +260,6 @@ class EazyOCR(EngineOCR):
         logger.debug("JSON → %s", json_path)
 
         return results
-
-    # ------------------------------------------------------------------ #
-    # Private helpers                                                      #
-    # ------------------------------------------------------------------ #
-
-    @staticmethod
-    def _crop_bubble(
-        img: cv2.typing.MatLike,
-        x: int, y: int, w: int, h: int,
-        crops_dir: str,
-        base_name: str,
-        bubble_id: int,
-    ) -> str | None:
-        img_h, img_w = img.shape[:2]
-        y0, y1 = max(0, y), min(img_h, y + h)
-        x0, x1 = max(0, x), min(img_w, x + w)
-        if y1 <= y0 or x1 <= x0:
-            return None
-        crop = img[y0:y1, x0:x1]
-        if crop.size == 0:
-            return None
-        crop_path = os.path.join(crops_dir, f"{base_name}_bubble_{bubble_id:03d}.png")
-        cv2.imwrite(crop_path, crop)
-        return crop_path
 
     def _detect_text_rects(
         self, 
@@ -667,83 +616,3 @@ class EazyOCR(EngineOCR):
             rects = merged
 
         return rects
-
-    # ------------------------------------------------------------------ #
-    # Spread detection                                                     #
-    # ------------------------------------------------------------------ #
-
-    @staticmethod
-    def _detect_spread_split(
-        img: cv2.typing.MatLike,
-        search_band: float = 0.15,
-        white_thresh: int = 240,
-        min_white_col_pct: float = 0.85,
-    ) -> int | None:
-        h, w = img.shape[:2]
-        if w <= h:
-            return None
-
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        center = w // 2
-        band_half = int(w * search_band / 2)
-        x_start = center - band_half
-        x_end   = center + band_half
-
-        band = gray[:, x_start:x_end]
-        white_mask = (band >= white_thresh).astype(np.float32)
-        col_white_pct = white_mask.mean(axis=0)
-
-        gutter_cols = np.where(col_white_pct >= min_white_col_pct)[0]
-        if len(gutter_cols) == 0:
-            return None
-
-        split_x = x_start + int(gutter_cols.mean())
-        return split_x
-
-    # ------------------------------------------------------------------ #
-    # Static image processing utilities                                    #
-    # ------------------------------------------------------------------ #
-
-    @staticmethod
-    def _assess_quality(img: cv2.typing.MatLike) -> dict:
-        """
-        Assess sharpness, contrast and resolution of the full page image.
-        Returns a dict with metrics and enhancement flags.
-
-        Thresholds tuned for scanned manga pages (full page, not crops):
-          sharpness  < 120  → blurry scan, apply unsharp mask
-          contrast   <  35  → faded/low-contrast, apply CLAHE
-          resolution < 800  → very small image, log a warning
-        """
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        h, w = gray.shape
-
-        sharpness = float(cv2.Laplacian(gray, cv2.CV_64F).var())
-        contrast  = float(gray.std())
-        resolution = min(h, w)
-
-        return {
-            "sharpness":      round(sharpness, 1),
-            "contrast":       round(contrast,  1),
-            "resolution":     resolution,
-            "needs_sharpen":  sharpness < 120,
-            "needs_contrast": contrast  <  35,
-            "low_res":        resolution < 800,
-        }
-
-    @staticmethod
-    def _upscale(img: cv2.typing.MatLike, scale: int = 2) -> cv2.typing.MatLike:
-        h, w = img.shape[:2]
-        return cv2.resize(img, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
-
-    @staticmethod
-    def _enhance_contrast_clahe(img: cv2.typing.MatLike) -> cv2.typing.MatLike:
-        lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-        l = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8)).apply(l)
-        return cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2BGR)
-
-    @staticmethod
-    def _sharpen(img: cv2.typing.MatLike) -> cv2.typing.MatLike:
-        kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-        return cv2.filter2D(img, -1, kernel)

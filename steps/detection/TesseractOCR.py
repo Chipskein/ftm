@@ -5,17 +5,13 @@ import os
 import cv2
 import numpy as np
 import pytesseract
-import torch
-from PIL import Image
-from transformers import AutoModel
 
-from ocr.PanelDetector import PanelDetector
-from utils.resource import ResourceMonitor
+from panel.PanelDetector import PanelDetector
+from profiler.ResourceMonitor import ResourceMonitor
 from .EngineOCR import EngineOCR
-from .types.BubbleZone import BubbleZone
+from dto.BubbleZone import BubbleZone
 
 logger = logging.getLogger(__name__)
-
 
 class TesseractOCR(EngineOCR):
 
