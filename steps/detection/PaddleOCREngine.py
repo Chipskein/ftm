@@ -2,8 +2,8 @@ import json
 import logging
 import os
 
-from ocr.PanelDetector import PanelDetector
-from utils.resource import ResourceMonitor
+from .panel.PanelDetector import PanelDetector
+from profiler.ResourceMonitor import ResourceMonitor
 
 # Disable oneDNN/MKL-DNN before ANY paddle import.
 os.environ["FLAGS_use_mkldnn"] = "0"
@@ -14,7 +14,6 @@ os.environ["FLAGS_new_executor_use_interpretermcore"] = "0"
 import cv2
 import numpy as np
 import torch
-from PIL import Image
 
 try:
     import paddle
@@ -23,13 +22,11 @@ except Exception:
     pass
 
 from paddleocr import PaddleOCR
-from transformers import AutoModel
 
 from .EngineOCR import EngineOCR
-from .types.BubbleZone import BubbleZone
+from dto.BubbleZone import BubbleZone
 
 logger = logging.getLogger(__name__)
-
 
 class PaddleOCREngine(EngineOCR):
 

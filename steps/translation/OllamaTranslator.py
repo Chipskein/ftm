@@ -1,4 +1,5 @@
-from ollama import Client,chat, ResponseError
+from ollama import Client, ResponseError
+from .Translator import Translator
 
 
 LANG_NAMES: dict[str, str] = {
@@ -13,7 +14,7 @@ AVAILABLE_MODEL = [
     "translategemma:12b"
 ]
 
-class OllamaTranslator:
+class OllamaTranslator(Translator):
     """
     Translates text between any supported language pair using the
     translategemma model via Ollama.
@@ -57,16 +58,6 @@ class OllamaTranslator:
         )
         
     def translate(self, text: str, lang: str) -> str:
-        """
-        Translate text from source_lang to the target language.
-
-        Args:
-            text : source text to translate
-            lang : target language code (e.g. 'en', 'pt')
-
-        Returns:
-            Translated string, or empty string on failure.
-        """
         if not text.strip():
             return ""
 

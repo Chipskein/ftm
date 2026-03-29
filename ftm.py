@@ -8,9 +8,8 @@ import os
 import time
 import argparse
 import logging
-from typesetter.Bubbletypesetter import BubbleTypesetter
-from utils.resource import ResourceMonitor
-from detector.detector import detect
+from steps.typesetting.Bubbletypesetter import BubbleTypesetter
+from profiler.ResourceMonitor import ResourceMonitor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,11 +34,11 @@ def run_step(label: str, fn):
 
 
 def run_ocr(bubbles: list[dict], debug: bool, use_cpu: bool) -> list[dict]:
-    from ocr.MangaOCR import MangaOCREngine
-    ocr = MangaOCREngine(use_cpu=use_cpu)
+    from steps.extraction.MangaOCR import MangaOCRExtractor
+    extractor = MangaOCRExtractor(use_cpu=use_cpu)
     for i, bubble in enumerate(bubbles):
         crop_path = bubble.get("crop")
-        jp_text = ocr.extract(crop_path)
+        jp_text = extractor.extract(crop_path)
         bubble["jp_text"] = jp_text
         if debug:
             print(f"  [{i+1}/{len(bubbles)}] {crop_path} → {jp_text!r}")
@@ -56,7 +55,7 @@ def run_translate(
     debug: bool = False,
 ) -> list[dict]:
     
-    from translator.OllamaTranslator import OllamaTranslator
+    from steps.translation.OllamaTranslator import OllamaTranslator
     translator = OllamaTranslator(
         source_lang="ja", 
         model=model, 
@@ -184,17 +183,12 @@ def main():
     try:
         bubbles = []
         if "detection" in steps and args.bubbles_json is None:
+            from steps.detection.EngineOCRFactory import EngineOCRFactory
             use_cpu = args.use_cpu_all or (args.use_cpu_step and "detection" in args.use_cpu_step)
+            engine = EngineOCRFactory(engine, debug, use_cpu, monitor)
             bubbles = run_step(
                 label="Detect speech bubbles",
-                fn=lambda: detect(
-                    image_path,
-                    engine,
-                    debug,
-                    tmp_dir,
-                    monitor,
-                    use_cpu
-                ),
+                fn=lambda: engine.run(image_path, tmp_dir)
             )
 
         if args.bubbles_json:
