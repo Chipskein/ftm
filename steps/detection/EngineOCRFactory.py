@@ -28,13 +28,9 @@ class EngineOCRFactory:
                 return EazyOCR(self._panel_detector, self.debug, self.monitor, self.use_cpu)
             
             #TODO: Really bad results should drop support for tesseract and paddle
-            #case "tesseract":
-            #    from .TesseractOCR import TesseractOCR
-            #    return TesseractOCR(panel_detector, debug, monitor,use_cpu)
-            
-            #case "paddle":
-            #    from .PaddleOCREngine import PaddleOCREngine
-            #    return PaddleOCREngine(panel_detector, debug, monitor,use_cpu)
+            case "paddle":
+                from .PaddleOCREngine import PaddleOCREngine
+                return PaddleOCREngine(self._panel_detector, self.debug, self.monitor)
             
             case "yolo":
                 from .YOLOTextDetector import YOLOTextDetector

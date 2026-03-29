@@ -2,9 +2,7 @@
 * Falar com os possiveis clientes(ver no zap)
     
 TODO:
-    * Refactor
-
-    Montar Dataset comparando os motores sem agrupamento sem filtragem (easy,paddle,tesseract,yolo)
+    Montar Dataset comparando os motores sem agrupamento sem filtragem (easy,paddle?,YOLO)
         
         TP (Verdadeiro +) → box detectado sobrepõe um box real (acertou onde tinha)
         FP (Falso +) → box detectado não sobrepõe nenhum real (inventou onde não tinha)
@@ -19,12 +17,12 @@ TODO:
 
     Para cada tipo
 
-        Deteccao(YOLO,EasyOCR,paddleOCR,Tesseract):
+        Deteccao(YOLO,EasyOCR,paddleOCR):
             X - Quantidade de retangulos
             Y - Tamanho do retangulo(area)
             Z - Tempo
 
-            Agrupamento/Filtragem(EasyOCR,paddleOCR,Tesseract,yolo):
+            Agrupamento/Filtragem(EasyOCR,paddleOCR,YOLO):
                 X - Quantidade de retangulos antes do agrupamento
                 Y - Quantidade de retangulos depois
                 Z - Tempo
