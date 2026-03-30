@@ -57,7 +57,7 @@ class OllamaTranslator(Translator):
             host=self.ollama_host
         )
         
-    def translate(self, text: str, lang: str) -> str:
+    def translate(self, text: str, lang: str, more_context: str = "") -> str:
         if not text.strip():
             return ""
 
@@ -65,6 +65,14 @@ class OllamaTranslator(Translator):
         if target_name is None:
             print(f"[OllamaTranslator] unknown language code: {lang}")
             return ""
+        
+        context_addition = ""
+        if more_context:
+            context_addition = (
+                f"### Additional Context:\n"
+                f"To help with nuance, keep the following context in mind:\n"
+                f"{more_context}\n\n"
+            )
 
         prompt = (
             f"You are a professional {self.source_name} ({self.source_lang}) "
@@ -76,6 +84,7 @@ class OllamaTranslator(Translator):
             f"Do not invent subjects or context not present in the source. "
             f"Produce only the {target_name} translation, "
             f"without any additional explanations or commentary.\n\n"
+            f"{context_addition}"
             f"Please translate the following {self.source_name} text into {target_name}:\n\n"
             f"{text}"
         )

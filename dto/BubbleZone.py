@@ -1,7 +1,6 @@
 from typing import TypedDict
 
-
-class BubbleZone(TypedDict, total=False):
+class BubbleZone(TypedDict):
     id:              int
     x:               int
     y:               int
@@ -10,3 +9,4 @@ class BubbleZone(TypedDict, total=False):
     crop:            str
     jp_text:         str
     translated_text: str
+    more_context:    str

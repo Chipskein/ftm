@@ -2,7 +2,7 @@
 * Falar com os possiveis clientes(ver no zap)
     
 TODO:
-    Montar Dataset comparando os motores sem agrupamento sem filtragem (easy,paddle?,YOLO)
+    Montar Dataset comparando os motores sem agrupamento sem filtragem (easy,paddle,YOLO,tesseract)
         
         TP (Verdadeiro +) → box detectado sobrepõe um box real (acertou onde tinha)
         FP (Falso +) → box detectado não sobrepõe nenhum real (inventou onde não tinha)

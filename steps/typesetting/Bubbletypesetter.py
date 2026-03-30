@@ -156,7 +156,6 @@ class BubbleTypesetter:
 
     @staticmethod
     def _get_contrast_color(bg_rgb: Tuple[int, int, int]) -> Tuple[int, int, int]:
-        # Standard relative luminance formula
         r, g, b = [v / 255.0 for v in bg_rgb]
         lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
         return (0, 0, 0) if lum > 0.5 else (255, 255, 255)
