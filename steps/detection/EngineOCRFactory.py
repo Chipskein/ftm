@@ -35,7 +35,7 @@ class EngineOCRFactory:
             case "yolo":
                 from .YOLOTextDetector import YOLOTextDetector
                 return YOLOTextDetector(
-                    "models/yolo_text_detector.pt", 
+                    "models/yolo_text_detector_1024_80t_7v.pt", 
                     panel_detector=self._panel_detector, 
                     debug=self.debug, 
                     monitor=self.monitor, 
