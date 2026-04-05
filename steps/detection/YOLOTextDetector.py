@@ -54,6 +54,22 @@ class YOLOTextDetector(EngineOCR):
         h, w = img.shape[:2]
         logger.info("processing image %s (%dx%d)", os.path.basename(img_path), w, h)
 
+        split_x = self.detect_spread_split(img)
+        if split_x is not None:
+            logger.debug("spread detected — split at x=%d", split_x)
+            left  = img[:, :split_x]
+            right = img[:, split_x:]
+            results_left  = self._run_single(left,  img_path, output_dir, suffix="_L")
+            results_right = self._run_single(
+                right, img_path, output_dir,
+                suffix="_R", x_offset=split_x,
+                id_offset=len(results_left),
+            )
+            results = results_left + results_right
+            logger.info("spread — left=%d  right=%d  total=%d bubbles",
+                        len(results_left), len(results_right), len(results))
+            return results
+
         return self._run_single(img, img_path, output_dir)
 
     def _run_single(
