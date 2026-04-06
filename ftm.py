@@ -33,9 +33,14 @@ def run_step(label: str, fn):
         raise
 
 
-def run_ocr(bubbles: list[dict], debug: bool, use_cpu: bool) -> list[dict]:
+def run_ocr(
+    bubbles: list[dict], 
+    debug: bool, 
+    use_cpu: bool,
+    monitor:ResourceMonitor | None = None
+) -> list[dict]:
     from steps.extraction.MangaOCR import MangaOCRExtractor
-    extractor = MangaOCRExtractor(use_cpu=use_cpu)
+    extractor = MangaOCRExtractor(use_cpu=use_cpu,monitor = monitor)
     for i, bubble in enumerate(bubbles):
         crop_path = bubble.get("crop")
         jp_text = extractor.extract(crop_path)
@@ -53,6 +58,7 @@ def run_translate(
     ollama_model_temperature: float = 0,
     field_name: str = "translated_text",
     debug: bool = False,
+    monitor: ResourceMonitor | None = None
 ) -> list[dict]:
     
     from steps.translation.OllamaTranslator import OllamaTranslator
@@ -60,7 +66,8 @@ def run_translate(
         source_lang="ja", 
         model=model, 
         ollama_host=ollama_host, 
-        ollama_model_temperature=ollama_model_temperature
+        ollama_model_temperature=ollama_model_temperature,
+        monitor=monitor
     )
 
     for i, bubble in enumerate(bubbles):
@@ -204,7 +211,7 @@ def main():
             use_cpu = args.use_cpu_all or (args.use_cpu_step and "extraction" in args.use_cpu_step)
             bubbles = run_step(
                 label="Extraction — extract Japanese text",
-                fn=lambda: run_ocr(bubbles, debug, use_cpu),
+                fn=lambda: run_ocr(bubbles, debug, use_cpu, monitor),
             )
 
         if "translation" in steps:
@@ -217,14 +224,15 @@ def main():
                     args.ollama_host,
                     args.ollama_model_temperature,
                     "translated_text", 
-                    debug
+                    debug,
+                    monitor
                 ),
             )
 
         if "typesetting" in steps:
             run_step(
                 label="Typeset translated text",
-                fn=lambda: BubbleTypesetter().typeset(
+                fn=lambda: BubbleTypesetter(monitor = monitor).typeset(
                     img_path=image_path,
                     bubbles=bubbles,
                     output_path=output_path,

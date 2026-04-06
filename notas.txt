@@ -1,25 +1,8 @@
 * Ver com o Borges sobre o tradutor -> vai me passar o contato
 
-* Falar com os possiveis clientes(ver no zap) -> Ver com a Raquel e o Igor o que eu preciso do cliente
-
-* Treinar Yolo(Texto+onmatopeia)
-    Modo de treino:
-        95% do livro para treino -> 5% para validação
-        * verificar imgsz
-
-    * imgsz diferentes
-    1024x1024
-    320x320
-    160x160
+* Falar com os possiveis clientes(ver no zap) -> Ver com a Raquel e o Igor o que eu preciso do cliente3
     
 TODO:
-    Montar Dataset comparando os motores sem agrupamento sem filtragem (easy,paddle,YOLO)
-        
-        TP (Verdadeiro +) → box detectado sobrepõe um box real (acertou onde tinha)
-        FP (Falso +) → box detectado não sobrepõe nenhum real (inventou onde não tinha)
-        TN (Verdadeiro -) → região sem texto, sem detecção (ignorado)
-        FN (Falso -) → box real não foi coberto por nenhuma detecção (perdeu onde tinha)
-
     * Testar no GTX 3060(12gb)
 
     * Testar no CPU e GPU mx250(2gb)
