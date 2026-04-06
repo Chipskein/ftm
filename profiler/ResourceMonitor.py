@@ -13,7 +13,7 @@ from pynvml import (
 )
 
 class ResourceMonitor:
-    def __init__(self, output_path="resource_log.csv", interval=0.5, gpu_index=0):
+    def __init__(self, output_path="resource_log.csv", interval=0.01, gpu_index=0):
         self.output_path = output_path
         self.interval = interval
         self.label = "idle"

@@ -18,10 +18,16 @@ class EngineOCRFactory:
         self.engine: EngineOCR = self._setup_engine(engine_name)
 
     def _setup_panel_detector(self):
+        if self.monitor:
+            self.monitor.set_label("EngineOCRFactory._setup_panel_detector")
+            
         from .panel.YOLOPanelDetector import YOLOPanelDetector
         return YOLOPanelDetector("models/panel_detector_model.pt", use_cpu = self.use_cpu)
 
     def _setup_engine(self, name: str) -> EngineOCR:
+        if self.monitor:
+            self.monitor.set_label("EngineOCRFactory._setup_engine")
+
         match name:
             case "easy":
                 from .EazyOcr import EazyOCR
@@ -45,4 +51,7 @@ class EngineOCRFactory:
                 raise ValueError(f"Engine '{name}' is not supported.")
 
     def run(self, image_path: str, tmp_dir: str) -> list[BubbleZone]:
+        if self.monitor:
+            self.monitor.set_label("EngineOCRFactory._run")
+
         return self.engine.run(image_path, tmp_dir)

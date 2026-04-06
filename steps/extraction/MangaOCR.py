@@ -18,8 +18,14 @@ class MangaOCRExtractor(TextExtractor):
         self._model_instance = MangaOcr(force_cpu=self.use_cpu)
         self.debug = debug
         self.monitor = monitor
+
+        if self.monitor:
+            self.monitor.set_label("MangaOCRExtractor Init")
         
     def extract(self, crop_path: str) -> str:
+        if self.monitor:
+            self.monitor.set_label(f"MangaOCRExtractor.extract from {crop_path}")
+
         try:
             text = self._model_instance(crop_path).strip()
             if not text or not self._has_japanese(text) or self._is_junk(text):
