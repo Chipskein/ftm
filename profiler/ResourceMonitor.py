@@ -1,3 +1,5 @@
+import os
+
 import psutil
 import csv
 import threading
@@ -21,6 +23,7 @@ class ResourceMonitor:
         self._thread = None
 
         nvmlInit()
+        self._process = psutil.Process(os.getpid())
         self.gpu_handle = nvmlDeviceGetHandleByIndex(gpu_index)
         gpu_name = nvmlDeviceGetName(self.gpu_handle)
         mem = nvmlDeviceGetMemoryInfo(self.gpu_handle)
@@ -32,6 +35,7 @@ class ResourceMonitor:
                 "timestamp", "label",
                 "cpu_percent",
                 "ram_used_mb", "ram_percent",
+                "proc_ram_used_mb",
                 "gpu_util_percent",
                 "gpu_mem_used_mb", "gpu_mem_free_mb", "gpu_mem_total_mb",
                 "gpu_temp_c", "gpu_power_w"
@@ -41,7 +45,7 @@ class ResourceMonitor:
         ts  = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         cpu = psutil.cpu_percent(interval=None)
         ram = psutil.virtual_memory()
-
+        proc_ram = self._process.memory_info().rss / 1024**2
         util = nvmlDeviceGetUtilizationRates(self.gpu_handle)
         mem  = nvmlDeviceGetMemoryInfo(self.gpu_handle)
         temp = nvmlDeviceGetTemperature(self.gpu_handle, NVML_TEMPERATURE_GPU)
@@ -55,6 +59,7 @@ class ResourceMonitor:
             ts, self.label,
             cpu,
             round(ram.used  / 1024**2, 1), ram.percent,
+            round(proc_ram, 1),
             util.gpu,
             round(mem.used  / 1024**2, 1),
             round(mem.free  / 1024**2, 1),

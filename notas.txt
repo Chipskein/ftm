@@ -1,6 +1,8 @@
-* Ver com o Borges sobre o tradutor -> vai me passar o contato
+* [] Ver com o Borges sobre o tradutor e falar com o tradutor caso ele não responda plano B
+* [] Mandar os documentos pro Thomas Assinar e explicar melhor pra ele
+comparar os modelos
+* [] Ver com o Betito se vamos fazer um frontend ou não
 
-* Falar com os possiveis clientes(ver no zap) -> Ver com a Raquel e o Igor o que eu preciso do cliente3
     
 TODO:
     * Testar no GTX 3060(12gb)
