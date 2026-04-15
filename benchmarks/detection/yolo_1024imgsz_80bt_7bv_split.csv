@@ -1,4 +1,4 @@
-image,tp(v+),fp(f+),fn(f-),vn(v-)
+image,tp(v+),fp(f+),fn(f-),tn(v-)
 AisazuNihaIrarenai_001_L.jpg,0,0,3,0
 AisazuNihaIrarenai_001_R.jpg,0,0,1,0
 AisazuNihaIrarenai_002_L.jpg,6,0,0,0
