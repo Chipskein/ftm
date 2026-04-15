@@ -20,7 +20,6 @@ class YOLOTextDetector(EngineOCR):
     def __init__(
         self,
         model_path: str,
-        panel_detector: PanelDetector,
         conf_threshold: float = 0.25,
         imgsz: int = 1024,
         debug: bool = False,
@@ -28,7 +27,6 @@ class YOLOTextDetector(EngineOCR):
         use_cpu: bool = False,
     ):
         super().__init__("YOLOTextDetector")
-        self.panel_detector = panel_detector
         self.conf_threshold = conf_threshold
         self.imgsz          = imgsz
         self.monitor        = monitor

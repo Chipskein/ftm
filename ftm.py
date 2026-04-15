@@ -163,7 +163,7 @@ def main():
 
     monitor: ResourceMonitor | None = None
     if use_monitor:
-        csv_path = os.path.join(tmp_dir, f"resources_{engine}.csv")
+        csv_path = os.path.join(tmp_dir, f"resources_{base_name}_{engine}.csv")
         monitor = ResourceMonitor(output_path=csv_path, interval=0.5)
         monitor.start(label=f"{engine}_start")
 

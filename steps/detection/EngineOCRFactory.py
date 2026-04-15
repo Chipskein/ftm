@@ -14,7 +14,10 @@ class EngineOCRFactory:
         self.debug = debug
         self.use_cpu = use_cpu
         self.monitor = monitor
-        self._panel_detector = self._setup_panel_detector()
+        
+        if engine_name != "yolo":
+            self._panel_detector = self._setup_panel_detector()
+
         self.engine: EngineOCR = self._setup_engine(engine_name)
 
     def _setup_panel_detector(self):
@@ -42,7 +45,6 @@ class EngineOCRFactory:
                 from .YOLOTextDetector import YOLOTextDetector
                 return YOLOTextDetector(
                     "models/yolo_text_detector_1024_95pbt_5pbv.pt", 
-                    panel_detector=self._panel_detector, 
                     debug=self.debug, 
                     monitor=self.monitor, 
                     use_cpu=self.use_cpu
