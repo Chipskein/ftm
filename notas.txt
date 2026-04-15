@@ -1,7 +1,16 @@
 * Ver com o Borges sobre o tradutor -> vai me passar o contato
 
 * Falar com os possiveis clientes(ver no zap) -> Ver com a Raquel e o Igor o que eu preciso do cliente3
-    
+
+
+TP (Verdadeiro +) → box detectado sobrepõe um box real (acertou onde tinha)
+ FP (Falso +) → box detectado não sobrepõe nenhum real (inventou onde não tinha) 
+
+TN (Verdadeiro -) → região sem texto, sem detecção (ignorado, não conta aqui)
+FN (Falso -) → box real não foi coberto por nenhuma detecção (perdeu onde tinha) 
+
+
+
 TODO:
     * Testar no GTX 3060(12gb)
 
