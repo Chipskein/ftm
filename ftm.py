@@ -2,13 +2,13 @@
 
 import warnings
 warnings.filterwarnings("ignore")
+import regex
 
 import json
 import os
 import time
 import argparse
 import logging
-from steps.typesetting.Bubbletypesetter import BubbleTypesetter
 from profiler.ResourceMonitor import ResourceMonitor
 
 logging.basicConfig(
@@ -43,7 +43,11 @@ def run_ocr(
     extractor = MangaOCRExtractor(use_cpu=use_cpu,monitor = monitor)
     for i, bubble in enumerate(bubbles):
         crop_path = bubble.get("crop")
+        start_time = time.perf_counter()
         jp_text = extractor.extract(crop_path)
+        elapsed = time.perf_counter() - start_time
+        bubble["extraction_symbols"] = len(regex.findall(r'\X', jp_text))
+        bubble["extraction_time_s"] = elapsed
         bubble["jp_text"] = jp_text
         if debug:
             print(f"  [{i+1}/{len(bubbles)}] {crop_path} → {jp_text!r}")
@@ -71,10 +75,28 @@ def run_translate(
     )
 
     for i, bubble in enumerate(bubbles):
+        start_time = time.perf_counter()
         translated = translator.translate(bubble["jp_text"], lang=target_lang)
+        elapsed = time.perf_counter() - start_time
+        bubble["translation_symbols"] = len(regex.findall(r'\X', bubble["jp_text"]))
+        bubble["translating_time_s"] = elapsed
         bubble[field_name] = translated
         if debug:
             print(f"  [{i+1}/{len(bubbles)}] {bubble['jp_text']!r} → {translated!r}")
+    return bubbles
+
+def run_typesetting(
+    bubbles: list[dict],
+    image_path: str,
+    output_path: str,
+    monitor: ResourceMonitor | None = None
+) -> list[dict]:
+    from steps.typesetting.Bubbletypesetter import BubbleTypesetter
+    bubbles = BubbleTypesetter(monitor = monitor).typeset(
+        img_path=image_path,
+        bubbles=bubbles,
+        output_path=output_path,
+    ),
     return bubbles
 
 
@@ -230,13 +252,14 @@ def main():
             )
 
         if "typesetting" in steps:
-            run_step(
+            bubbles = run_step(
                 label="Typeset translated text",
-                fn=lambda: BubbleTypesetter(monitor = monitor).typeset(
-                    img_path=image_path,
-                    bubbles=bubbles,
-                    output_path=output_path,
-                ),
+                fn=lambda: run_typesetting(
+                    bubbles, 
+                    image_path, 
+                    output_path, 
+                    monitor
+                )
             )
 
         json_path = os.path.join(tmp_dir, f"{base_name}_bubbles.json")

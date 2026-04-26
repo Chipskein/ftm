@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 import cv2
 import torch
@@ -7,7 +8,6 @@ from ultralytics import YOLO
 
 from .EngineOCR import EngineOCR
 from dto.BubbleZone import BubbleZone
-from .panel.PanelDetector import PanelDetector
 from profiler.ResourceMonitor import ResourceMonitor
 import numpy as np
 
@@ -84,12 +84,19 @@ class YOLOTextDetector(EngineOCR):
         crops_dir = os.path.join(output_dir, "crops_" + base_name)
         os.makedirs(crops_dir, exist_ok=True)
 
+        start_detection_time = time.perf_counter()
         raw_detections = [d for d in self._detect(img) if d["class_id"] == CLS_TEXT]
         if self.debug:
             debug_img = self._draw_detections(img.copy(), raw_detections)
             cv2.imwrite(os.path.join(output_dir, f"{base_name}_raw_debug.png"), debug_img)
-
+        detection_time = time.perf_counter() - start_detection_time
+        
+        num_raw_detection = len(raw_detections)
+        
+        start_group = time.perf_counter()
         detections = self._nms_keep_smallest(raw_detections)
+        group_time = time.perf_counter() - start_group
+        num_kept_detection = len(detections)
 
         if self.debug:
             debug_img = self._draw_detections(img.copy(), detections)
@@ -117,6 +124,12 @@ class YOLOTextDetector(EngineOCR):
                 w=bw,
                 h=bh,
                 crop=crop_path,
+                area=bw * bh,
+                detection_method="yolo",
+                detection_rects_total= num_raw_detection,
+                detection_rects_kept= num_kept_detection,
+                detection_time_s= detection_time,
+                grouping_time_s= group_time
             )
             results.append(bubble)
 
@@ -207,7 +220,9 @@ class YOLOTextDetector(EngineOCR):
         for det in detections:
             bx, by, bw, bh = det["bbox"]
             cv2.rectangle(img, (bx, by), (bx + bw, by + bh), (0, 200, 0), 2)
-            label = f"text {det['confidence']:.2f}"
+            class_id = det["class_id"]
+            class_name = self.model.names[class_id]
+            label = f"{class_name} {det['confidence']:.2f}"
             cv2.putText(img, label, (bx, max(by - 6, 0)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 0), 1, cv2.LINE_AA)
         return img

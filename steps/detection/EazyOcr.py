@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 
 import cv2
 import easyocr
@@ -102,12 +103,16 @@ class EazyOCR(EngineOCR):
         cv2.imwrite(orig_crop_path, img)
 
         logger.debug("running EasyOCR on 3 variants...")
+        start_det = time.perf_counter()
         rects = self._detect_text_rects(orig_crop_path, enhanced_path, inv_path, output_dir)
         logger.debug("raw text rects: %d", len(rects))
 
         rects = self._normalize_rects(rects)
         logger.debug("normalized text rects: %d", len(rects))
+        num_raw = len(rects)
+        detection_time = time.perf_counter() - start_det
 
+        start_group = time.perf_counter()
         logger.debug("detecting panels ...")
         panels = self.panel_detector._find_panel_dividers(img)
         logger.info("panels found: %d", len(panels))
@@ -167,6 +172,8 @@ class EazyOCR(EngineOCR):
                 )
             bubbles = self._merge_overlapping_rects(bubbles)
             bubbles = [b for b in bubbles if b[2] >= 20 and b[3] >= 20]
+            group_time = time.perf_counter() - start_group
+            num_kept_total = len(bubbles)
             logger.debug("panel %d — ratio=%.2f  gap=(%d,%d)  max_h=%.0f  max_w=%.0f  → %d bubble(s)",
                          idx, ratio, gap_x, gap_y,
                          max_h if max_h else -1,
@@ -233,6 +240,12 @@ class EazyOCR(EngineOCR):
                         jp_text="",
                         en_text="",
                         translated_text="",
+                        area=w * h,
+                        detection_method="easyocr",
+                        detection_time_s=detection_time,
+                        grouping_time_s=group_time,
+                        detection_rects_total=num_raw,
+                        detection_rects_kept=num_kept_total
                     )
                 )
                 cv2.rectangle(out, (x, y), (x + w, y + h), color, 2)

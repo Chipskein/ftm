@@ -1,9 +1,3 @@
-* [] Ver com o Borges sobre o tradutor e falar com o tradutor caso ele não responda plano B
-* [] Mandar os documentos pro Thomas Assinar e explicar melhor pra ele
-comparar os modelos
-* [] Ver com o Betito se vamos fazer um frontend ou não
-
-
 TP (Verdadeiro +) → box detectado sobrepõe um box real (acertou onde tinha)
 FP (Falso +) → box detectado não sobrepõe nenhum real (inventou onde não tinha) 
 

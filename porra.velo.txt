@@ -1,0 +1,23 @@
+TODO hoje
+
+[X] Rodar Só CPU PC master race
+
+[X] Tabelar detecção yolo 1024 95pbt
+[X] Tabelar detecção yolo 320 95pbt
+[X] Tabelar detecção yolo8-seg
+
+[X] Tabelar Agrupamento yolo 1024 95pbt
+
+[X] Tabelar extração qtd de ideogramas
+[X] Grafico Extração
+
+[X] Tabelar Traducao qtd de ideogramas
+[X] Grafico Tradução
+
+[X] Tabelar typesetting qtd de caracter
+[X] Grafico typesetting
+
+[] Pegar crops do texto e botar no google forms
+
+
+

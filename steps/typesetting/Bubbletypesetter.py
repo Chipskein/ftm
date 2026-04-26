@@ -1,6 +1,7 @@
 import os
 import logging
 from functools import lru_cache
+import time
 from typing import List, Tuple, Dict, Optional, Any
 from profiler.ResourceMonitor import ResourceMonitor
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
@@ -37,7 +38,7 @@ class BubbleTypesetter:
             logger.warning(f"Font {self.font_path} not found, falling back.")
             return ImageFont.load_default()
 
-    def typeset(self, img_path: str, bubbles: List[Dict[str, Any]], output_path: str) -> None:
+    def typeset(self, img_path: str, bubbles: List[Dict[str, Any]], output_path: str) -> List[Dict[str, Any]]:
         if self.monitor:
             self.monitor.set_label("BubbleTypesetter._typeset")
 
@@ -49,13 +50,19 @@ class BubbleTypesetter:
             with Image.open(img_path) as img:
                 canvas = img.convert("RGB")
                 for i, bubble in enumerate(bubbles):
+                    start_time = time.perf_counter()
                     self._process_bubble(canvas, bubble)
+                    elapsed = time.perf_counter() - start_time
+                    bubble["typesetting_characters"] = len(bubble["translated_text"])
+                    bubble["typesetting_time_s"] = elapsed
 
                 os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
                 canvas.save(output_path, quality=95)
                 logger.info(f"Successfully saved typeset image to {output_path}")
         except Exception as e:
             logger.error(f"Failed to process image: {e}")
+        
+        return bubbles
 
     def _process_bubble(self, canvas: Image.Image, bubble: Dict[str, Any]) -> None:
         if self.monitor:

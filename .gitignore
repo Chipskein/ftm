@@ -11,3 +11,4 @@ images-teste*
 *.json
 !teste.json
 yolo
+!benchmarks/graphics/*
