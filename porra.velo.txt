@@ -1,12 +1,15 @@
 TODO hoje
 
-[X] Rodar Só CPU PC master race
-
 [X] Tabelar detecção yolo 1024 95pbt
 [X] Tabelar detecção yolo 320 95pbt
 [X] Tabelar detecção yolo8-seg
 
+[X] Grafico detecção yolo 1024 X 320
+[X] Grafico detecção yolo 1024 X v8-seg(padrão)
+[X] Grafico detecção yolo 1024 X Easy X Paddle
+
 [X] Tabelar Agrupamento yolo 1024 95pbt
+[X] Grafico Agrupamento
 
 [X] Tabelar extração qtd de ideogramas
 [X] Grafico Extração
