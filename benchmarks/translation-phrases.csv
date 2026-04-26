@@ -1,0 +1,30 @@
+ID,CROP,TEXTO Original,Tradução
+1,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_003.png,廃品回収,Coleta de sucata
+2,./tmp/yolo-1024-translation-bench/crops_AkkeraKanjinchou_050_L/AkkeraKanjinchou_050_L_bubble_002.png,じゃあな！,Até mais!
+3,./tmp/yolo-1024-translation-bench/crops_AkkeraKanjinchou_050_R/AkkeraKanjinchou_050_R_bubble_013.png,認めないわよ,Eu não concordo.
+4,./tmp/yolo-1024-translation-bench/crops_Akuhamu_020_R/Akuhamu_020_R_bubble_019.png,逆らえない,Impossível resistir.
+5,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_R/AisazuNihaIrarenai_005_R_bubble_017.png,あちゃー,Droga.
+7,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_005.png,郵便物の区分けとか,Classificação de correspondências.
+8,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_006.png,はあそれも考えたんですけど,"Ah, eu também pensei nisso."
+9,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_007.png,ごめんなさいでもちょっとだけ,"Desculpa, mas só um pouquinho."
+10,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_014.png,え？アルバイト？,"Tipo, um emprego temporário?"
+11,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_R/AisazuNihaIrarenai_005_R_bubble_019.png,しかしやばいなあ,"Mas, isso é sério."
+12,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_R/AisazuNihaIrarenai_005_R_bubble_025.png,心苦しいのはこっちだちゃ,"Eu estou sofrendo, e não você."
+13,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_079_L/AisazuNihaIrarenai_079_L_bubble_005.png,ひどいクビはひどぃ！！,Que demissão horrível!
+14,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_079_L/AisazuNihaIrarenai_079_L_bubble_010.png,家庭教師．．．と子供の父親,Professor particular... e o pai do aluno.
+15,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_079_R/AisazuNihaIrarenai_079_R_bubble_016.png,気が安まるというか．．．,Parece que estou mais relaxado...
+16,./tmp/yolo-1024-translation-bench/crops_AkkeraKanjinchou_026_L/AkkeraKanjinchou_026_L_bubble_007.png,第二帖、奮いの月夜,"Segundo capítulo, Noite de Exaltação"
+17,./tmp/yolo-1024-translation-bench/crops_AkkeraKanjinchou_050_L/AkkeraKanjinchou_050_L_bubble_004.png,コラ！おい青葉っ,"Ei, Hijiri!"
+18,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_008.png,あそーいうコマゴマしたのダメ！！,"Não, isso não é permitido!"
+19,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_010.png,じゃさウエイトレスなんかいいんじゃない？,Será que trabalhar como garçonete não seria uma boa ideia?
+20,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_011.png,あの今さミーティングの途中なんだけど．．．,"Ei, espera um pouco. A reunião ainda não acabou..."
+21,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_L/AisazuNihaIrarenai_005_L_bubble_015.png,ヘンに悩まないで家庭教師でもやればいいじゃないか,Por que você não pode simplesmente contratar um tutor?
+22,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_R/AisazuNihaIrarenai_005_R_bubble_023.png,こんなことだったらあの炊飯器買うんじゃなかった,"Se eu tivesse comprado aquela panela elétrica, não teria passado por isso."
+23,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_R/AisazuNihaIrarenai_005_R_bubble_026.png,たいへんねえ北陸の貧しい農家に生まれると,Ser um camponês pobre na região de Hokuriku é... complicado.
+24,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_R/AisazuNihaIrarenai_005_R_bubble_031.png,３万円じゃ下宿代しか出ないじゃないのっ,"Com 30 mil ienes, só consigo pagar o aluguel de um quarto."
+25,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_079_L/AisazuNihaIrarenai_079_L_bubble_006.png,いろいろ問題おこしたからねおまえも,"Você também causou muitos problemas, né?"
+26,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_079_L/AisazuNihaIrarenai_079_L_bubble_008.png,あそっか！！きのう電話あったのコロッと忘れてた,Nossa! Eu tinha completamente esquecido que tinha recebido uma ligação ontem.
+27,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_079_L/AisazuNihaIrarenai_079_L_bubble_011.png,なにそれ？そんな話聞いてないよっ！！,O que é isso? Eu não ouvi nada disso!
+28,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_005_R/AisazuNihaIrarenai_005_R_bubble_028.png,家の悪口いわないでくれる？もともとムリをいったあたしが悪かったんだ,"Por favor, não fale mal da minha casa. Eu que fui a culpada, então..."
+29,./tmp/yolo-1024-translation-bench/crops_AisazuNihaIrarenai_079_R/AisazuNihaIrarenai_079_R_bubble_023.png,今朝お伺いしたのは実はおりいってお願いしていことがありまして．．．,"Na verdade, eu fui até lá hoje de manhã para pedir algo..."
+30,./tmp/yolo-1024-translation-bench/crops_BakuretsuKungFuGirl_035_L/BakuretsuKungFuGirl_035_L_bubble_012.png,つばさ？へぇーー人間って魔法が使えないのにすごいことできるんだねぇ,"Asas? Nossa, os humanos conseguem fazer coisas incríveis, mesmo sem usar magia."
