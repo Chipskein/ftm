@@ -44,7 +44,7 @@ ator
 [X] diagrama de classes
 
 [X] diagrama de documentos(BubbleZone)
-[] Arquitetura
+[X] Arquitetura
 
 código
     ia detectar texto -> bbox
