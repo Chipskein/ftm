@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+
+actor "Leitor" as leitor
+
+package "FTM" {
+    usecase "Traduzir Página" as UC1
+}
+
+' Atores Secundários (Sistemas externos ou modelos de IA)
+package "Motores ML" {
+    actor "Detector" as detector << System >>
+    actor "Extrator" as extrator << System >>
+    actor "Tradutor" as tradutor << System >>
+}
+
+' Relacionamentos
+leitor --> UC1 : inicia
+
+' O Caso de Uso "Traduzir Página" interage com as IAs para ser concluído
+UC1 -- detector
+UC1 -- extrator
+UC1 -- tradutor
+
+@enduml
