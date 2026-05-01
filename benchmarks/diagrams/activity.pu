@@ -1,0 +1,42 @@
+@startuml
+|Usuário|
+start
+:Página (img);
+
+|Processamento|
+:Detectar texto;
+note right: gerar bounding boxes
+
+|Artefatos|
+:BBoxes;
+
+|Processamento|
+:Recortar texto;
+note right: crop por bounding box
+
+|Artefatos|
+:Recortes (img);
+
+|Processamento|
+:Extrair texto JP;
+note right: OCR em japonês
+
+|Artefatos|
+:Texto JP;
+
+|Processamento|
+:Traduzir texto;
+note right: JP → PT-BR
+
+|Artefatos|
+:Texto PT-BR + bbox;
+
+|Processamento|
+:Sobrescrever texto;
+note right: renderizar PT-BR na img
+
+|Usuário|
+:Página traduzida (img);
+stop
+
+@enduml
