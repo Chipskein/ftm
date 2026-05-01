@@ -38,7 +38,7 @@ ator
 [X] casos de uso
         traduzir página
 
-diagrama de atividade
+[X] diagrama de atividade
     usuario -> pagina (img) -> detectar texto -> bbox -> recortar texto -> recortes (img) -> extrair texto em japonês -> texto JP -> traduzir texto em japonês -> texto PT-BR + bbox -> sobrescrever texto em português -> pagina (img) -> usuario
 
 diagrama de classes
