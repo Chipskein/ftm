@@ -8,6 +8,8 @@ import time
 import argparse
 
 from .profiler.ResourceMonitor import ResourceMonitor
+from contextvars import ContextVar
+from .profiler.context import current_monitor
 
 class FTM:
     def __init__(self, args: argparse.Namespace):
@@ -53,12 +55,12 @@ class FTM:
 
     def _detect(self) -> list[dict]:
         from .steps.detection.EngineOCRFactory import EngineOCRFactory
-        engine = EngineOCRFactory(self.engine_name, self.debug, self._use_cpu("detection"), self.monitor)
+        engine = EngineOCRFactory(self.engine_name, self.debug, self._use_cpu("detection"))
         return engine.run(self.image_path, self.tmp_dir)
 
     def _extract(self, bubbles: list[dict]) -> list[dict]:
-        from .steps.extraction.MangaOCR import MangaOCRExtractor
-        extractor = MangaOCRExtractor(use_cpu=self._use_cpu("extraction"), monitor=self.monitor)
+        from .steps.extraction.MangaOCRExtractor import MangaOCRExtractor
+        extractor = MangaOCRExtractor(use_cpu=self._use_cpu("extraction"))
         for i, bubble in enumerate(bubbles):
             crop_path = bubble.get("crop")
             t0 = time.perf_counter()
@@ -76,8 +78,7 @@ class FTM:
             source_lang="ja",
             model=self.translate_model,
             ollama_host=self.ollama_host,
-            ollama_model_temperature=self.ollama_model_temperature,
-            monitor=self.monitor,
+            ollama_model_temperature=self.ollama_model_temperature
         )
         for i, bubble in enumerate(bubbles):
             t0 = time.perf_counter()
@@ -91,7 +92,7 @@ class FTM:
 
     def _typeset(self, bubbles: list[dict]) -> list[dict]:
         from .steps.typesetting.Bubbletypesetter import BubbleTypesetter
-        return BubbleTypesetter(monitor=self.monitor).typeset(
+        return BubbleTypesetter().typeset(
             img_path=self.image_path,
             bubbles=bubbles,
             output_path=self.output_path,
@@ -134,8 +135,12 @@ class FTM:
     def run(self):
         self._print_header()
         t0 = time.perf_counter()
+        token = None
 
         try:
+            if self.monitor:
+                token = current_monitor.set(self.monitor)
+
             bubbles = []
 
             if "detection" in self.steps and not self.bubbles_json:
@@ -182,3 +187,6 @@ class FTM:
         finally:
             if self.monitor:
                 self.monitor.stop()
+
+            if token:
+                current_monitor.reset(token)

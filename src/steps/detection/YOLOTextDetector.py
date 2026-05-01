@@ -8,7 +8,6 @@ from ultralytics import YOLO
 
 from .EngineOCR import EngineOCR
 from ...dto.BubbleZone import BubbleZone
-from ...profiler.ResourceMonitor import ResourceMonitor
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -23,13 +22,11 @@ class YOLOTextDetector(EngineOCR):
         conf_threshold: float = 0.25,
         imgsz: int = 1024,
         debug: bool = False,
-        monitor: ResourceMonitor | None = None,
         use_cpu: bool = False,
     ):
         super().__init__("YOLOTextDetector")
         self.conf_threshold = conf_threshold
         self.imgsz          = imgsz
-        self.monitor        = monitor
         self.debug          = debug
         self.use_cpu        = use_cpu
 

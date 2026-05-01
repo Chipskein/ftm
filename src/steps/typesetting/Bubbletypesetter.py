@@ -3,7 +3,8 @@ import logging
 from functools import lru_cache
 import time
 from typing import List, Tuple, Dict, Optional, Any
-from ...profiler.ResourceMonitor import ResourceMonitor
+
+from ...profiler.decorator import step
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from ...assets import font
 
@@ -18,31 +19,22 @@ class BubbleTypesetter:
 
     def __init__(
         self, 
-        font_path: Optional[str] = None,
-        monitor: ResourceMonitor | None = None
+        font_path: Optional[str] = None
     ):
-        self.monitor = monitor
         self.font_path = font_path or self.DEFAULT_FONT_PATH
         self._dummy_draw = ImageDraw.Draw(Image.new("L", (1, 1)))
         
-        if self.monitor:
-            self.monitor.set_label("Init Typesetter")
-
     @lru_cache(maxsize=256)
+    @step(lambda self, size: f"BubbleTypesetter._get_font size={size}")
     def _get_font(self, size: int) -> ImageFont.FreeTypeFont:
-        if self.monitor:
-            self.monitor.set_label("BubbleTypesetter._get_font")
-
         try:
             return ImageFont.truetype(self.font_path, size)
         except (OSError, AttributeError):
             logger.warning(f"Font {self.font_path} not found, falling back.")
             return ImageFont.load_default()
 
+    @step("BubbleTypesetter._typeset")
     def typeset(self, img_path: str, bubbles: List[Dict[str, Any]], output_path: str) -> List[Dict[str, Any]]:
-        if self.monitor:
-            self.monitor.set_label("BubbleTypesetter._typeset")
-
         if not os.path.exists(img_path):
             logger.error(f"Input image not found: {img_path}")
             return
@@ -65,10 +57,8 @@ class BubbleTypesetter:
         
         return bubbles
 
+    @step("BubbleTypesetter._process_bubble")
     def _process_bubble(self, canvas: Image.Image, bubble: Dict[str, Any]) -> None:
-        if self.monitor:
-            self.monitor.set_label("BubbleTypesetter._process_bubble")
-
         text = bubble.get("translated_text", "").strip()
         if not text:
             return
@@ -86,10 +76,8 @@ class BubbleTypesetter:
         draw = ImageDraw.Draw(canvas)
         self._draw_centered_text(draw, text, (x, y, w, h), text_color)
 
+    @step("BubbleTypesetter._apply_cleaning")
     def _apply_cleaning(self, canvas: Image.Image, mask: Image.Image, color: Tuple[int, int, int]):
-        if self.monitor:
-            self.monitor.set_label("BubbleTypesetter._apply_cleaning")
-
         blurred = canvas.filter(ImageFilter.GaussianBlur(radius=6))
         canvas.paste(blurred, mask=mask)
         
@@ -97,10 +85,8 @@ class BubbleTypesetter:
         tint_mask = mask.point(lambda p: p * 200 // 255)
         canvas.paste(tint_layer, mask=tint_mask)
 
+    @step("BubbleTypesetter._draw_centered_text")
     def _draw_centered_text(self, draw: ImageDraw.ImageDraw, text: str, rect: Tuple[int, int, int, int], color: Tuple):
-        if self.monitor:
-            self.monitor.set_label("BubbleTypesetter._draw_centered_text")
-
         x, y, w, h = rect
         inner_w, inner_h = w - (self.PADDING * 2), h - (self.PADDING * 2)
         
@@ -119,10 +105,8 @@ class BubbleTypesetter:
         
         draw.multiline_text((tx, ty), wrapped_text, font=font, fill=color, align="center", spacing=line_spacing)
 
+    @step("BubbleTypesetter._fit_text")
     def _fit_text(self, text: str, max_w: int, max_h: int) -> Tuple[ImageFont.FreeTypeFont, str]:
-        if self.monitor:
-            self.monitor.set_label("BubbleTypesetter._fit_text")
-        
         """Encontra o equilíbrio entre tamanho de fonte e quebra de linha."""
         for size in range(self.MAX_FONT_SIZE, self.MIN_FONT_SIZE - 1, -1):
             font = self._get_font(size)
@@ -137,10 +121,8 @@ class BubbleTypesetter:
         min_font = self._get_font(self.MIN_FONT_SIZE)
         return min_font, self._wrap_text_pixel_width(text, min_font, max_w)
 
+    @step("BubbleTypesetter._wrap_text_pixel_width")
     def _wrap_text_pixel_width(self, text: str, font: ImageFont.FreeTypeFont, max_px_width: int) -> str:
-        if self.monitor:
-            self.monitor.set_label("BubbleTypesetter._wrap_text_pixel_width")
-        
         words = text.split()
         lines = []
         current_line = []

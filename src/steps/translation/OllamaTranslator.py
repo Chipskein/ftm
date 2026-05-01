@@ -1,6 +1,6 @@
 from ollama import Client, ResponseError
 from .Translator import Translator
-from ...profiler.ResourceMonitor import ResourceMonitor
+from ...profiler.decorator import step
 
 
 LANG_NAMES: dict[str, str] = {
@@ -29,8 +29,7 @@ class OllamaTranslator(Translator):
             source_lang: str = "ja", 
             model: str = MODEL, 
             ollama_host: str = "http://localhost:11434",
-            ollama_model_temperature: float = 0.0,
-            monitor: ResourceMonitor | None = None
+            ollama_model_temperature: float = 0.0
         ):
         """
         Args:
@@ -50,10 +49,6 @@ class OllamaTranslator(Translator):
                 f"Unknown model '{model}'. "
                 f"Supported: {AVAILABLE_MODEL}"
             )
-        self.monitor = monitor
-        
-        if self.monitor:
-            self.monitor.set_label("Connecting with Ollama")
 
         self.source_lang = source_lang
         self.source_name = LANG_NAMES[source_lang]
@@ -64,10 +59,8 @@ class OllamaTranslator(Translator):
             host=self.ollama_host
         )
         
+    @step(lambda self, text, lang, *_: f"OllamaTranslator.translate {text} to {lang}")
     def translate(self, text: str, lang: str, more_context: str = "") -> str:
-        if self.monitor:
-            self.monitor.set_label(f"Translating {text}")
-            
         if not text.strip():
             return ""
 

@@ -1,0 +1,57 @@
+@startuml
+
+class Main
+class FTM
+
+package "profiler" {
+    class ResourceMonitor
+    class MonitorContext <<ContextVar>>
+    class step <<decorator>>
+}
+
+package "dto" {
+    class BubbleZone <<TypeDict>>
+}
+
+package "steps" {
+    package "detection" {
+        abstract class EngineOCR
+        class EngineOCRFactory
+        class YOLOTextDetector extends EngineOCR
+    }
+
+    package "extraction" {
+        abstract class Extractor
+        class MangaOCRExtractor extends Extractor
+    }
+
+    package "translation" {
+        abstract class Translator
+        class OllamaTranslator extends Translator
+    }
+
+    package "typesetting" {
+        class BubbleTypesetter
+    }
+}
+
+
+' Relações de Orquestração
+Main --> FTM
+FTM o-- ResourceMonitor : agregação
+FTM ..> MonitorContext : define/reseta
+FTM ..> BubbleZone : gerencia lista de
+
+' Relações de Profiling
+step ..> MonitorContext : obtém
+step ..> ResourceMonitor : atualiza label
+
+' Relações de Execução (Dependency Injection/Usage)
+FTM ..> EngineOCRFactory : usa
+FTM ..> Extractor : usa
+FTM ..> Translator : usa
+FTM ..> BubbleTypesetter : usa
+
+EngineOCRFactory ..> YOLOTextDetector : instancia
+
+@enduml
