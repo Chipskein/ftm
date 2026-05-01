@@ -1,0 +1,97 @@
+@startuml
+skinparam style strictuml
+skinparam packageStyle frame
+
+package "detection" {
+    interface EngineOCR_Interface {
+        + run(img_path, output_dir): list
+    }
+
+    abstract class EngineOCR implements EngineOCR_Interface {
+        + name: String
+        + loadImage(image_path): Mat
+        + preProcessImage(image): dict
+        + assess_and_fix_quality(img): Mat
+        + detect_spread_split(img): int
+        + crop_bubble(img, x, y, w, h, ...): String
+        # {static} _upscale(img, scale): Mat
+        # {static} _sharpen(img): Mat
+    }
+
+    class EngineOCRFactory {
+        - debug: bool
+        - use_cpu: bool
+        - monitor: ResourceMonitor
+        + __init__(engine_name, debug, use_cpu, monitor)
+        - _setup_engine(name): EngineOCR
+        + run(image_path, tmp_dir): list<BubbleZone>
+    }
+
+    class YOLOTextDetector extends EngineOCR {
+        - model: YOLO
+        - conf_threshold: float
+        + run(img_path, output_dir): list<BubbleZone>
+        - _run_single(img, ...): list
+        - _detect(img): list<dict>
+        - _nms_keep_smallest(detections): list<dict>
+    }
+}
+
+package "extraction" {
+    class MangaOCRExtractor {
+        - use_cpu: bool
+        - monitor: ResourceMonitor
+        + extract(crop_path): String
+    }
+}
+
+package "translation" {
+    class OllamaTranslator {
+        - model: String
+        - host: String
+        - temperature: float
+        + translate(text, lang): String
+    }
+}
+
+package "typesetting" {
+    class BubbleTypesetter {
+        - monitor: ResourceMonitor
+        + typeset(img_path, bubbles, output_path)
+    }
+}
+
+package "dto" {
+    class BubbleZone {
+        + id: int
+        + x, y, w, h: int
+        + crop: String
+        + jp_text: String
+        + translated_text: String
+        + detection_time_s: float
+        + extraction_time_s: float
+    }
+}
+
+package "profiler" {
+    class ResourceMonitor {
+        - output_path: String
+        + set_label(label)
+        + start(label)
+        + stop()
+    }
+}
+
+' Relacionamentos de dependência e uso (Pipeline do main.py)
+EngineOCRFactory o-- ResourceMonitor
+MangaOCRExtractor o-- ResourceMonitor
+BubbleTypesetter o-- ResourceMonitor
+OllamaTranslator o-- ResourceMonitor
+
+EngineOCRFactory ..> EngineOCR : "creates & returns"
+YOLOTextDetector ..> BubbleZone : "fills initial data"
+MangaOCRExtractor ..> BubbleZone : "fills jp_text"
+OllamaTranslator ..> BubbleZone : "fills translated_text"
+BubbleTypesetter ..> BubbleZone : "renders to image"
+
+@enduml
