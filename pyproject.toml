@@ -1,0 +1,39 @@
+[project]
+name = "FTM"
+version = "0.0.1"
+description = "FTM"
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = [
+    "opencv-python",
+    "numpy",
+    "Pillow",
+    "torch",
+    "psutil",
+    "nvidia-ml-py",
+    "manga-ocr",
+    "scikit-learn",
+    "scipy",
+    "pandas",
+    "ollama",
+    "ultralytics",
+]
+
+[project.optional-dependencies]
+gpu = [
+    "torch @ https://download.pytorch.org/whl/cu121/torch-2.2.0%2Bcu121-cp310-cp310-linux_x86_64.whl",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]   # search from root, finds src/profiler, src/steps, etc.
+
+[tool.setuptools.package-data]
+"src" = ["assets/models/*.pt", "assets/fonts/*.ttf", "assets/fonts/*.otf"]
+
+[project.scripts]
+ftm = "src.main:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"

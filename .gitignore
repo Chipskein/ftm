@@ -13,3 +13,5 @@ images-teste*
 yolo
 !benchmarks/graphics/*
 !benchmarks/diagrams/*
+dist
+*.egg-info/

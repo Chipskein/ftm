@@ -7,8 +7,8 @@ import torch
 from ultralytics import YOLO
 
 from .EngineOCR import EngineOCR
-from dto.BubbleZone import BubbleZone
-from profiler.ResourceMonitor import ResourceMonitor
+from ...dto.BubbleZone import BubbleZone
+from ...profiler.ResourceMonitor import ResourceMonitor
 import numpy as np
 
 logger = logging.getLogger(__name__)

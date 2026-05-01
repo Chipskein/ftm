@@ -1,7 +1,8 @@
 from typing import Optional
-from dto.BubbleZone import BubbleZone
+from ...dto.BubbleZone import BubbleZone
 from .EngineOCR import EngineOCR
-from profiler.ResourceMonitor import ResourceMonitor
+from ...profiler.ResourceMonitor import ResourceMonitor
+from ...assets import model
 
 class EngineOCRFactory:
     def __init__(
@@ -15,36 +16,17 @@ class EngineOCRFactory:
         self.use_cpu = use_cpu
         self.monitor = monitor
         
-        if engine_name != "yolo":
-            self._panel_detector = self._setup_panel_detector()
-
         self.engine: EngineOCR = self._setup_engine(engine_name)
-
-    def _setup_panel_detector(self):
-        if self.monitor:
-            self.monitor.set_label("EngineOCRFactory._setup_panel_detector")
-            
-        from .panel.YOLOPanelDetector import YOLOPanelDetector
-        return YOLOPanelDetector("models/panel_detector_model.pt", use_cpu = self.use_cpu)
 
     def _setup_engine(self, name: str) -> EngineOCR:
         if self.monitor:
             self.monitor.set_label("EngineOCRFactory._setup_engine")
 
         match name:
-            case "easy":
-                from .EazyOcr import EazyOCR
-                return EazyOCR(self._panel_detector, self.debug, self.monitor, self.use_cpu)
-            
-            #TODO: Really bad results should drop support for tesseract and paddle
-            case "paddle":
-                from .PaddleOCREngine import PaddleOCREngine
-                return PaddleOCREngine(self._panel_detector, self.debug, self.monitor)
-            
             case "yolo":
                 from .YOLOTextDetector import YOLOTextDetector
                 return YOLOTextDetector(
-                    "models/yolo_text_detector_1024_95pbt_5pbv.pt", 
+                    model("yolo_text_detector_1024_95pbt_5pbv.pt"), 
                     debug=self.debug, 
                     monitor=self.monitor, 
                     use_cpu=self.use_cpu

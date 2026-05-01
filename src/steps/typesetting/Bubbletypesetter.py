@@ -3,14 +3,15 @@ import logging
 from functools import lru_cache
 import time
 from typing import List, Tuple, Dict, Optional, Any
-from profiler.ResourceMonitor import ResourceMonitor
+from ...profiler.ResourceMonitor import ResourceMonitor
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from ...assets import font
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("BubbleTypesetter")
 
 class BubbleTypesetter:
-    DEFAULT_FONT_PATH = os.path.join("fonts", "KOMIKAX_.ttf")
+    DEFAULT_FONT_PATH = font("KOMIKAX_.ttf")
     PADDING = 2
     MAX_FONT_SIZE = 120
     MIN_FONT_SIZE = 6

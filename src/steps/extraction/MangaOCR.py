@@ -1,7 +1,7 @@
 import logging
 from manga_ocr import MangaOcr
-from profiler.ResourceMonitor import ResourceMonitor
-from steps.extraction.Extractor import TextExtractor
+from ...profiler.ResourceMonitor import ResourceMonitor
+from ...steps.extraction.Extractor import TextExtractor
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 from ollama import Client, ResponseError
 from .Translator import Translator
-from profiler.ResourceMonitor import ResourceMonitor
+from ...profiler.ResourceMonitor import ResourceMonitor
 
 
 LANG_NAMES: dict[str, str] = {
