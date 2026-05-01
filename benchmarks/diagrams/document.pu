@@ -1,0 +1,27 @@
+@startjson
+[
+{
+    "id": "int",
+    "x": "int",
+    "y": "int",
+    "w": "250",
+    "h": "80",
+    "crop": "string",
+    "jp_text": "string",
+    "translated_text": "string",
+    "more_context": "string",
+    "area": "float",
+    "detection_method": "string",
+    "detection_rects_total": "int",
+    "detection_rects_kept": "int",
+    "detection_time_s": "float",
+    "grouping_time_s": "float",
+    "extraction_symbols": "int",
+    "extraction_time_s": "float",
+    "translation_symbols": "int",
+    "translating_time_s": "float",
+    "typesetting_characters": "int",
+    "typesetting_time_s": "float"
+}
+]
+@endjson

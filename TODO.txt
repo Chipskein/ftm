@@ -43,7 +43,7 @@ diagrama de atividade
 
 diagrama de classes
 
-diagrama de documentos(BubbleZone)
+[X] diagrama de documentos(BubbleZone)
 
 código
     ia detectar texto -> bbox

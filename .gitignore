@@ -12,3 +12,4 @@ images-teste*
 !teste.json
 yolo
 !benchmarks/graphics/*
+!benchmarks/diagrams/*
