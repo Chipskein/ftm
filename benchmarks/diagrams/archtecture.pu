@@ -1,0 +1,47 @@
+@startuml
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+title Sistema de Tradução (Execução Local - Refinado)
+
+actor "Usuário" as user
+
+rectangle "Ambiente Local" {
+
+  package "FTM Orquestrador" {
+    component "Pipeline Controller" as ctrl
+    component "Typesetting" as type
+  }
+
+  package "Motores de ML" {
+    component "YOLO Text Detector" as det
+    component "MangaOCR" as ocr
+    component "Translator (Ollama)" as trans
+  }
+
+  artifact "JSON (Métricas/BubbleZones)" as db
+  file "Imagem Traduzida" as img_out
+
+  ' Fluxo de Dados
+  user --> ctrl : Imagem Original
+  
+  ctrl --> det : Imagem Full
+  det --> ctrl : Bounding Boxes
+  
+  ctrl --> ocr : Imagem Crops
+  ocr --> ctrl : Texto Original (JP)
+  
+  ctrl --> trans : Texto JP
+  trans --> ctrl : Texto Traduzido (PT)
+  
+  ctrl --> type : Dados + Imagem
+  type --> img_out : Renderização
+  
+  ' Registro de métricas
+  ctrl --> db : Logs/Métricas
+  type --> db : Logs/Métricas
+  
+  img_out --> user : Resultado
+}
+
+@enduml
