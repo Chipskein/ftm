@@ -21,8 +21,8 @@ package "steps" {
     }
 
     package "extraction" {
-        abstract class Extractor
-        class MangaOCRExtractor extends Extractor
+        abstract class TextExtractor
+        class MangaOCRExtractor extends TextExtractor
     }
 
     package "translation" {
