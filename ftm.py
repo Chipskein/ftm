@@ -96,7 +96,7 @@ def run_typesetting(
         img_path=image_path,
         bubbles=bubbles,
         output_path=output_path,
-    ),
+    )
     return bubbles
 
 

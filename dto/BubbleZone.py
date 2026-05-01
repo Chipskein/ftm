@@ -12,11 +12,11 @@ class BubbleZone(TypedDict):
     more_context:    str
 
     area:            int
-    detection_method:        str    # 'yolo' | 'easyocr' | 'paddleocr'
-    detection_rects_total:   int    # total de retângulos detectados antes do filtro
-    detection_rects_kept:    int    # retângulos após agrupamento/filtragem
-    detection_time_s:        float  # tempo da etapa de detecção
-    grouping_time_s:         float  # tempo do agrupamento
+    detection_method:        str
+    detection_rects_total:   int
+    detection_rects_kept:    int
+    detection_time_s:        float
+    grouping_time_s:         float
     
     extraction_symbols: int
     extraction_time_s: float

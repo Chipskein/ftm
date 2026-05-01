@@ -1,0 +1,65 @@
+@startuml
+skinparam packageStyle frame
+
+class Main
+
+package "detection" {
+    abstract class EngineOCR {
+    }
+
+    class EngineOCRFactory {
+    }
+
+    class YOLOTextDetector extends EngineOCR {
+    }
+}
+
+package "extraction" {
+    abstract class TextExtractor {
+    }
+
+    class MangaOCRExtractor extends TextExtractor {
+    }
+}
+
+package "translation" {
+    abstract class Translator {
+    }
+
+    class OllamaTranslator extends Translator {
+    }
+}
+
+package "typesetting" {
+    class BubbleTypesetter {
+    }
+}
+
+package "dto" {
+    class BubbleZone {
+    }
+}
+
+package "profiler" {
+    class ResourceMonitor {
+    }
+}
+
+
+Main --> EngineOCRFactory
+Main --> MangaOCRExtractor
+Main --> OllamaTranslator
+Main --> BubbleTypesetter
+
+EngineOCRFactory o-- ResourceMonitor
+MangaOCRExtractor o-- ResourceMonitor
+BubbleTypesetter o-- ResourceMonitor
+OllamaTranslator o-- ResourceMonitor
+
+EngineOCRFactory ..> EngineOCR  
+YOLOTextDetector ..> BubbleZone  
+MangaOCRExtractor ..> BubbleZone  
+OllamaTranslator ..> BubbleZone  
+BubbleTypesetter ..> BubbleZone  
+
+@enduml
