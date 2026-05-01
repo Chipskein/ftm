@@ -33,6 +33,17 @@ class FTM:
         self.ollama_model_temperature = args.ollama_model_temperature
         self.use_cpu_all  = args.use_cpu_all
         self.use_cpu_step = args.use_cpu_step or []
+        self.use_monitor = args.use_monitor
+
+        self.huggingface_online_check = args.huggingface_online_check
+        if self.huggingface_online_check:
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "0")
+            os.environ.setdefault("HF_HUB_OFFLINE", "0")
+        else:
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            
+
 
         os.makedirs(self.tmp_dir, exist_ok=True)
         self.base_name   = os.path.splitext(os.path.basename(self.image_path))[0]
@@ -40,7 +51,7 @@ class FTM:
         self.monitor     = self._setup_monitor()
 
     def _setup_monitor(self) -> ResourceMonitor | None:
-        if not hasattr(self, '_use_monitor') or not self._use_monitor:
+        if not hasattr(self, 'use_monitor') or not self.use_monitor:
             return None
         csv_path = os.path.join(self.tmp_dir, f"resources_{self.base_name}_{self.engine_name}.csv")
         monitor = ResourceMonitor(output_path=csv_path, interval=0.5)
@@ -125,6 +136,9 @@ class FTM:
         print(f"  ollama_model_temperature: {self.ollama_model_temperature}")
         print(f"  use_cpu_all:              {self.use_cpu_all}")
         print(f"  use_cpu_step:             {self.use_cpu_step}")
+        print(f"  huggingface_online_check: {self.huggingface_online_check}")
+        print(f"  TRANSFORMERS_OFFLINE:     {os.environ.get('TRANSFORMERS_OFFLINE')}")
+        print(f"  HF_HUB_OFFLINE:           {os.environ.get('HF_HUB_OFFLINE')}")
         print(f"└──")
 
     def run(self):
@@ -200,10 +214,12 @@ def parse_args() -> argparse.Namespace:
         "--debug", action="store_true", default=False,
         help="Show all logs and save all intermediate results (crops, debug images, etc.) in the tmp directory"
     )
+
     parser.add_argument(
-        "--monitor", action="store_true", default=False,
-        help="Monitor CPU/RAM resource usage and save to CSV in the tmp directory (requires psutil)"
+        "--huggingface_online_check", action="store_true", default=False,
+        help="Check Hugging Face model availability at startup and warn if offline(Default use cache/ offline mode)"
     )
+
     parser.add_argument(
         "--steps", nargs="+",
         choices=["detection", "extraction", "translation", "typesetting"],
@@ -231,10 +247,17 @@ def parse_args() -> argparse.Namespace:
         "--ollama-model-temperature", default=0.0, type=float,
         help="Temperature for the model (default: 0.0)"
     )
+    
+    parser.add_argument(
+        "--use-monitor", action="store_true", default=False,
+        help="Monitor CPU/RAM resource usage and save to CSV in the tmp directory (requires psutil)"
+    )
+
     parser.add_argument(
         "--use-cpu-all", action="store_true", default=False,
         help="Use CPU for all steps (default: False)"
     )
+
     parser.add_argument(
         "--use-cpu-step", nargs="+", choices=["detection", "extraction"], default=[],
         help="Use CPU for specific steps (overrides --use-cpu-all)"

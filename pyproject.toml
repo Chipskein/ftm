@@ -11,7 +11,6 @@ dependencies = [
     "Pillow",
     "torch",
     "psutil",
-    "nvidia-ml-py",
     "manga-ocr",
     "scikit-learn",
     "scipy",
@@ -21,12 +20,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gpu = [
-    "torch @ https://download.pytorch.org/whl/cu121/torch-2.2.0%2Bcu121-cp310-cp310-linux_x86_64.whl",
+nvidia = [
+    "nvidia-ml-py",
 ]
 
 [tool.setuptools.packages.find]
-where = ["."]   # search from root, finds src/profiler, src/steps, etc.
+where = ["."]
 
 [tool.setuptools.package-data]
 "src" = ["assets/models/*.pt", "assets/fonts/*.ttf", "assets/fonts/*.otf"]
