@@ -28,17 +28,23 @@ Precisão(Acertou todos os balões) = TP / (TP + FP)​
 Recall(Achou todos os balões) = TP / (TP + FN)
 F1-Score(Média Hármonica - Puxa pro menor valor) = 2 * Precisão * Recall / (Precisão + Recall )
 
-Fazer diagramas
+*Fazer diagramas*
 ator
     leitor ->
     ia (detecção) --
+    ia (extracao) --
     ia (tradução) --
+
 casos de uso
     traduzir página
+
 diagrama de atividade
     usuario -> pagina (img) -> detectar texto -> bbox -> recortar texto -> recortes (img) -> extrair texto em japonês -> texto JP -> traduzir texto em japonês -> texto PT-BR + bbox -> sobrescrever texto em português -> pagina (img) -> usuario
+
 diagrama de classes
-diagrama de documentos
+
+diagrama de documentos(BubbleZone)
+
 código
     ia detectar texto -> bbox
     recortar texto
