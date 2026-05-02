@@ -46,9 +46,9 @@ ator
 [X] diagrama de documentos(BubbleZone)
 [X] Arquitetura
 
-código
-    ia detectar texto -> bbox
-    recortar texto
-    ia (OCR) extrair texto -> texto JP
-    ia tradução -> texto PT-BR
-    sobrescrever texto
+Snipets
+[]    ia detectar texto -> bbox
+[]    recortar texto
+[]    ia (OCR) extrair texto -> texto JP
+[]    ia tradução -> texto PT-BR
+[]    sobrescrever texto
