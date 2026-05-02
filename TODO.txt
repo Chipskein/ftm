@@ -41,14 +41,14 @@ ator
 [X] diagrama de atividade
     usuario -> pagina (img) -> detectar texto -> bbox -> recortar texto -> recortes (img) -> extrair texto em japonês -> texto JP -> traduzir texto em japonês -> texto PT-BR + bbox -> sobrescrever texto em português -> pagina (img) -> usuario
 
-[] diagrama de classes
+[X] diagrama de classes
 
 [X] diagrama de documentos(BubbleZone)
-[] Arquitetura
+[X] Arquitetura
 
-código
-    ia detectar texto -> bbox
-    recortar texto
-    ia (OCR) extrair texto -> texto JP
-    ia tradução -> texto PT-BR
-    sobrescrever texto
+Snipets
+[]    ia detectar texto -> bbox
+[]    recortar texto
+[]    ia (OCR) extrair texto -> texto JP
+[]    ia tradução -> texto PT-BR
+[]    sobrescrever texto

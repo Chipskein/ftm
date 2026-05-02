@@ -1,0 +1,200 @@
+@startuml
+
+class Main {
+    + main()
+    + parse_args() : Namespace
+}
+
+class FTM {
+    - monitor: ResourceMonitor
+    + run()
+    - _detect(): list
+    - _extract(bubbles): list
+    - _translate(bubbles): list
+    - _typeset(bubbles): list
+}
+
+package "profiler" {
+    class ResourceMonitor {
+        - output_path : str
+        - interval : float
+        - label : str
+        - _stop_event : threading.Event
+        - _thread : threading.Thread
+        - _process : psutil.Process
+        - has_gpu : bool
+        - gpu_handle : nvmlHandle
+        --
+        + __init__(output_path, interval, gpu_index)
+        - _sample() : list
+        - _loop()
+        + start(label)
+        + stop()
+        + set_label(label)
+    }
+
+    class MonitorContext <<ContextVar>> {
+        + get() : ResourceMonitor
+        + set(value : ResourceMonitor)
+    }
+
+    class step <<decorator>> {
+        + __call__(func)
+        + wrapper(*args, **kwargs)
+    }
+}
+
+package "dto" {
+    class BubbleZone <<TypedDict>> {
+        + id : int
+        + x : int
+        + y : int
+        + w : int
+        + h : int
+        + crop : str
+        + jp_text : str
+        + translated_text : str
+        + more_context : str
+        -- Métricas de Detecção --
+        + area : int
+        + detection_method : str
+        + detection_rects_total : int
+        + detection_rects_kept : int
+        + detection_time_s : float
+        + grouping_time_s : float
+        -- Métricas de Extração --
+        + extraction_symbols : int
+        + extraction_time_s : float
+        -- Métricas de Tradução --
+        + translation_symbols : int
+        + translating_time_s : float
+        -- Métricas de Typesetting --
+        + typesetting_characters : int
+        + typesetting_time_s : float
+    }
+}
+
+package "steps" {
+    package "detection" {
+        abstract class EngineOCR {
+            + name : str
+            --
+            + __init__(name: str)
+            {abstract} + run(img_path, output_dir) : list
+            + loadImage(image_path) : Mat
+            + preProcessImage(image) : dict
+            + assess_and_fix_quality(img) : Mat
+            + detect_spread_split(img) : int | None
+            + crop_bubble(img, x, y, w, h, ...) : str
+            {static} # _upscale(img, scale) : Mat
+            {static} # _enhance_contrast_clahe(img) : Mat
+            {static} # _sharpen(img) : Mat
+            {static} # _iou(bbox_a, bbox_b) : float
+        }
+    
+        class EngineOCRFactory {
+            - debug : bool
+            - use_cpu : bool
+            --
+            + __init__(engine_name, debug, use_cpu)
+            - _setup_engine(name) : EngineOCR
+            + run(image_path, tmp_dir) : List<BubbleZone>
+        }
+    
+        class YOLOTextDetector {
+            - conf_threshold : float
+            - imgsz : int
+            - model : YOLO
+            --
+            + __init__(model_path, conf, imgsz, debug, use_cpu)
+            + run(img_path, output_dir) : List<BubbleZone>
+            - _run_single(img, img_path, ...) : List<BubbleZone>
+            - _detect(img) : list<dict>
+            - _nms_keep_smallest(detections, iou_thresh) : list<dict>
+            - _draw_detections(img, detections) : Mat
+        }
+    }
+    
+    EngineOCR <|-- YOLOTextDetector
+    EngineOCRFactory o-- EngineOCR : gerencia
+    YOLOTextDetector ..> profiler.step : utiliza
+
+    package "extraction" {
+        abstract class TextExtractor {
+            {static} - _JUNK_RE : Pattern
+            {static} - _JAPANESE_RE : Pattern
+            --
+            + __init__(name: str)
+            {abstract} + extract(crop_path: str) : str
+            # _is_junk(text: str) : bool
+            # _has_japanese(text: str) : bool
+        }
+    
+        class MangaOCRExtractor {
+            + extract(crop_path: str) : str
+        }
+        TextExtractor <|-- MangaOCRExtractor
+    }
+
+    package "translation" {
+        abstract class Translator {
+            {abstract} + translate(text: str, lang: str) : str
+        }
+    
+        class OllamaTranslator {
+            - source_lang : str
+            - source_name : str
+            - model : str
+            - ollama_host : str
+            - ollama_model_temperature : float
+            - _ollama_client : Client
+            --
+            + __init__(source_lang, model, ollama_host, ollama_model_temperature)
+            + translate(text, lang, more_context) : str
+        }
+        Translator <|-- OllamaTranslator
+    }
+
+    package "typesetting" {
+        class BubbleTypesetter {
+            {static} + DEFAULT_FONT_PATH : str
+            {static} + PADDING : int
+            {static} + MAX_FONT_SIZE : int
+            {static} + MIN_FONT_SIZE : int
+            - font_path : str
+            - _dummy_draw : ImageDraw
+            --
+            + __init__(font_path: str)
+            + typeset(img_path, bubbles, output_path) : List
+            - _process_bubble(canvas, bubble)
+            - _get_font(size) : ImageFont
+            - _apply_cleaning(canvas, mask, color)
+            - _draw_centered_text(draw, text, rect, color)
+            - _fit_text(text, max_w, max_h) : Tuple
+            - _wrap_text_pixel_width(text, font, max_px) : str
+            {static} - _sample_color(img, x, y, w, h) : RGB
+            {static} - _get_contrast_color(bg_rgb) : RGB
+        }
+    }
+}
+
+
+' Relações de Orquestração
+Main --> FTM
+FTM o-- ResourceMonitor : agregação
+FTM ..> MonitorContext : define/reseta
+FTM ..> BubbleZone : gerencia lista de
+
+' Relações de Profiling
+step ..> MonitorContext : obtém
+step ..> ResourceMonitor : atualiza label
+
+' Relações de Execução (Dependency Injection/Usage)
+FTM ..> EngineOCRFactory : usa
+FTM ..> TextExtractor : usa
+FTM ..> Translator : usa
+FTM ..> BubbleTypesetter : usa
+
+EngineOCRFactory ..> YOLOTextDetector : instancia
+
+@enduml
