@@ -54,27 +54,27 @@ Executa o pipeline completo (detecção → extração → tradução → diagra
 
 **Instalação padrão:**
 ```bash
-pip install git+https://github.com/seu-usuario/ftm.git
+pip install git+https://github.com/Chipskein/ftm.git
 ```
 
 **Com suporte a GPU NVIDIA (nvidia-ml-py):**
 ```bash
-pip install "ftm[nvidia] @ git+https://github.com/seu-usuario/ftm.git"
+pip install "ftm[nvidia] @ git+https://github.com/Chipskein/ftm.git"
 ```
 
 **Versão específica ou branch:**
 ```bash
 # branch específica
-pip install git+https://github.com/seu-usuario/ftm.git@main
+pip install git+https://github.com/Chipskein/ftm.git@main
 
 # tag/versão específica
-pip install git+https://github.com/seu-usuario/ftm.git@v0.0.1
+pip install git+https://github.com/Chipskein/ftm.git@v0.0.1
 ```
 
 ### Via clone local
 
 ```bash
-git clone https://github.com/seu-usuario/ftm.git
+git clone https://github.com/Chipskein/ftm.git
 cd ftm
 
 # instalação padrão
