@@ -1,4 +1,4 @@
-# 🈯 FTM — Ferramenta de Tradução de Mangás
+# FTM — Ferramenta de Tradução de Mangás
 
 Pipeline modular de tradução de mangás com aceleração GPU que detecta automaticamente balões de fala, extrai o texto em japonês, traduz e insere o resultado de volta na imagem.
 
