@@ -3,19 +3,19 @@ left to right direction
 
 actor "Leitor" as leitor
 
-package "FTM" {
-    usecase "Traduzir Página" as UC1
-}
+
+usecase "Traduzir Página" as UC1
+
 
 ' Atores Secundários (Sistemas externos ou modelos de IA)
-package "Motores ML" {
-    actor "Detector" as detector << System >>
-    actor "Extrator" as extrator << System >>
-    actor "Tradutor" as tradutor << System >>
-}
+
+actor "Detector" as detector << System >>
+actor "Extrator" as extrator << System >>
+actor "Tradutor" as tradutor << System >>
+
 
 ' Relacionamentos
-leitor --> UC1 : inicia
+leitor --> UC1
 
 ' O Caso de Uso "Traduzir Página" interage com as IAs para ser concluído
 UC1 -- detector

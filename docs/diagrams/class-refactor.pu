@@ -1,6 +1,6 @@
 @startuml
+skinparam LineType Ortho
 
-class Main
 class FTM
 
 package "profiler" {
@@ -37,21 +37,21 @@ package "steps" {
 
 
 ' Relações de Orquestração
-Main --> FTM
-FTM o-- ResourceMonitor : agregação
-FTM ..> MonitorContext : define/reseta
-FTM ..> BubbleZone : gerencia lista de
+
+FTM o-- ResourceMonitor
+FTM .. MonitorContext
+FTM .. BubbleZone
 
 ' Relações de Profiling
-step ..> MonitorContext : obtém
-step ..> ResourceMonitor : atualiza label
+step .. MonitorContext
+step .. ResourceMonitor
 
 ' Relações de Execução (Dependency Injection/Usage)
-FTM ..> EngineOCRFactory : usa
-FTM ..> Extractor : usa
-FTM ..> Translator : usa
-FTM ..> BubbleTypesetter : usa
+FTM .. EngineOCRFactory
+FTM .. TextExtractor
+FTM .. Translator
+FTM .. BubbleTypesetter
 
-EngineOCRFactory ..> YOLOTextDetector : instancia
+EngineOCRFactory .. YOLOTextDetector
 
 @enduml

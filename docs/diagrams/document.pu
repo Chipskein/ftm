@@ -22,6 +22,8 @@
     "translating_time_s": "float",
     "typesetting_characters": "int",
     "typesetting_time_s": "float"
-}
+},
+{},
+{}
 ]
 @endjson

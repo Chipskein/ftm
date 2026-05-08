@@ -7,51 +7,55 @@ title Pipeline de Tradução
 
 |Leitor|
 start
-:Fornece Página (img);
+:Fornecer Página Original;
 
-|FTM (Sistema/Orquestrador)|
+|FTM\n(Sistema/Orquestrador)|
 :Inicializar BubbleZones;
 
-|Detector (Motor ML)|
+|Detector\n(Motor ML)|
 :Detectar Bounding Boxes;
-note right
-  **Popula BubbleZone:**
-  * id, x, y, w, h
-  * detection_method
-  * detection_time_s
-end note
+'note right
+'  **Popula BubbleZone:**
+'  * id, x, y, w, h
+'  * detection_method
+'  * detection_time_s
+'end note
 
-|FTM (Sistema/Orquestrador)|
-:Recortar Imagens (Crops);
-note right: popula **crop**
+|FTM\n(Sistema/Orquestrador)|
+:Recortar Imagens;
+'note right: popula **crop**
 
-|Extrator (Motor ML)|
-:OCR (Extração JP);
-note right
-  **Popula:**
-  * jp_text
-  * extraction_symbols
-  * extraction_time_s
-end note
+|Extrator\n(Motor ML)|
+:Extrair Texto;
+'note right
+'  **Popula:**
+'  * jp_text
+'  * extraction_symbols
+'  * extraction_time_s
+'end note
 
-|Tradutor (Motor ML)|
-:Tradução JP -> PT-BR;
-note right
-  **Popula:**
-  * translated_text
-  * translation_symbols
-  * translating_time_s
-end note
+|FTM\n(Sistema/Orquestrador)|
+:Enviar Texto;
 
-|FTM (Sistema/Orquestrador)|
-:Sobrescrever Texto (Typesetting);
-note right
-  **Popula:**
-  * typesetting_characters
-  * typesetting_time_s
-end note
+
+|Tradutor\n(Motor ML)|
+:Traduzir Texto;
+'note right
+'  **Popula:**
+'  * translated_text
+'  * translation_symbols
+'  * translating_time_s
+'end note
+
+|FTM\n(Sistema/Orquestrador)|
+:Sobrescrever Texto;
+'note right
+'  **Popula:**
+'  * typesetting_characters
+'  * typesetting_time_s
+'end note
 
 |Leitor|
-:Visualiza Página Traduzida;
+:Visualizar Página Traduzida;
 stop
 @enduml
