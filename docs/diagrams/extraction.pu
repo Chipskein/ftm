@@ -1,0 +1,18 @@
+@startuml
+package "extraction" {
+        abstract class TextExtractor {
+            {static} - _JUNK_RE : Pattern
+            {static} - _JAPANESE_RE : Pattern
+            --
+            + __init__(name: str)
+            {abstract} + extract(crop_path: str) : str
+            # _is_junk(text: str) : bool
+            # _has_japanese(text: str) : bool
+        }
+    
+        class MangaOCRExtractor {
+            + extract(crop_path: str) : str
+        }
+        TextExtractor <|-- MangaOCRExtractor
+    }
+@enduml

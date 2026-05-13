@@ -1,0 +1,36 @@
+@startuml
+
+package "profiler" {
+    class ResourceMonitor {
+        - output_path : str
+        - interval : float
+        - label : str
+        - _stop_event : threading.Event
+        - _thread : threading.Thread
+        - _process : psutil.Process
+        - has_gpu : bool
+        - gpu_handle : nvmlHandle
+        --
+        + __init__(output_path, interval, gpu_index)
+        - _sample() : list
+        - _loop()
+        + start(label)
+        + stop()
+        + set_label(label)
+    }
+
+    class MonitorContext <<ContextVar>> {
+        + get() : ResourceMonitor
+        + set(value : ResourceMonitor)
+    }
+
+    class step <<decorator>> {
+        + __call__(func)
+        + wrapper(*args, **kwargs)
+    }
+}
+
+step ..> MonitorContext : obtém
+step ..> ResourceMonitor : atualiza label
+
+@enduml

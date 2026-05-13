@@ -1,0 +1,20 @@
+@startuml
+package "translation" {
+        abstract class Translator {
+            {abstract} + translate(text: str, lang: str) : str
+        }
+    
+        class OllamaTranslator {
+            - source_lang : str
+            - source_name : str
+            - model : str
+            - ollama_host : str
+            - ollama_model_temperature : float
+            - _ollama_client : Client
+            --
+            + __init__(source_lang, model, ollama_host, ollama_model_temperature)
+            + translate(text, lang, more_context) : str
+        }
+        Translator <|-- OllamaTranslator
+    }
+@enduml

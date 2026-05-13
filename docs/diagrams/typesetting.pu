@@ -1,0 +1,23 @@
+@startuml
+package "typesetting" {
+        class BubbleTypesetter {
+            {static} + DEFAULT_FONT_PATH : str
+            {static} + PADDING : int
+            {static} + MAX_FONT_SIZE : int
+            {static} + MIN_FONT_SIZE : int
+            - font_path : str
+            - _dummy_draw : ImageDraw
+            --
+            + __init__(font_path: str)
+            + typeset(img_path, bubbles, output_path) : List
+            - _process_bubble(canvas, bubble)
+            - _get_font(size) : ImageFont
+            - _apply_cleaning(canvas, mask, color)
+            - _draw_centered_text(draw, text, rect, color)
+            - _fit_text(text, max_w, max_h) : Tuple
+            - _wrap_text_pixel_width(text, font, max_px) : str
+            {static} - _sample_color(img, x, y, w, h) : RGB
+            {static} - _get_contrast_color(bg_rgb) : RGB
+        }
+    }
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+
+package "dto" {
+    class BubbleZone <<TypedDict>> {
+        + id : int
+        + x : int
+        + y : int
+        + w : int
+        + h : int
+        + crop : str
+        + jp_text : str
+        + translated_text : str
+
+        -- Métricas de Detecção --
+        + area : int
+        + detection_method : str
+        + detection_rects_total : int
+        + detection_rects_kept : int
+        + detection_time_s : float
+        + grouping_time_s : float
+
+        -- Métricas de Extração --
+        + extraction_symbols : int
+        + extraction_time_s : float
+
+        -- Métricas de Tradução --
+        + translation_symbols : int
+        + translating_time_s : float
+
+        -- Métricas de Typesetting --
+        + typesetting_characters : int
+        + typesetting_time_s : float
+    }
+}
+
+@enduml

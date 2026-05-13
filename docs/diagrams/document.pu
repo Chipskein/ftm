@@ -9,7 +9,6 @@
     "crop": "string",
     "jp_text": "string",
     "translated_text": "string",
-    "more_context": "string",
     "area": "float",
     "detection_method": "string",
     "detection_rects_total": "int",
