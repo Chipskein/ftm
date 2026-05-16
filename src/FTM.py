@@ -1,7 +1,6 @@
 import warnings
 warnings.filterwarnings("ignore")
 
-import regex
 import json
 import os
 import time
@@ -65,7 +64,7 @@ class FTM:
             crop_path = bubble.get("crop")
             t0 = time.perf_counter()
             jp_text = extractor.extract(crop_path)
-            bubble["extraction_symbols"] = len(regex.findall(r'\X', jp_text))
+            bubble["extraction_symbols"] = len(jp_text)
             bubble["extraction_time_s"]  = time.perf_counter() - t0
             bubble["jp_text"]            = jp_text
             if self.debug:
@@ -83,7 +82,7 @@ class FTM:
         for i, bubble in enumerate(bubbles):
             t0 = time.perf_counter()
             translated = translator.translate(bubble["jp_text"], lang=self.translate_lang)
-            bubble["translation_symbols"] = len(regex.findall(r'\X', bubble["jp_text"]))
+            bubble["translation_symbols"] = len(bubble["jp_text"])
             bubble["translating_time_s"]  = time.perf_counter() - t0
             bubble["translated_text"]     = translated
             if self.debug:
