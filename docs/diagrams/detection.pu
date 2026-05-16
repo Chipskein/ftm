@@ -1,0 +1,48 @@
+@startuml
+
+package "detection" {
+    abstract class EngineOCR {
+        + name : str
+        --
+        + __init__(name: str)
+        {abstract} + run(img_path, output_dir) : list
+        + loadImage(image_path) : Mat
+        + preProcessImage(image) : dict
+        + assess_and_fix_quality(img) : Mat
+        + detect_spread_split(img) : int | None
+        + crop_bubble(img, x, y, w, h, ...) : str
+        {static} # _upscale(img, scale) : Mat
+        {static} # _enhance_contrast_clahe(img) : Mat
+        {static} # _sharpen(img) : Mat
+        {static} # _iou(bbox_a, bbox_b) : float
+    }
+
+    class EngineOCRFactory {
+        - debug : bool
+        - use_cpu : bool
+        --
+        + __init__(engine_name, debug, use_cpu)
+        - _setup_engine(name) : EngineOCR
+        + run(image_path, tmp_dir) : List<BubbleZone>
+    }
+
+    class YOLOTextDetector {
+        - conf_threshold : float
+        - imgsz : int
+        - model : YOLO
+        --
+        + __init__(model_path, conf, imgsz, debug, use_cpu)
+        + run(img_path, output_dir) : List<BubbleZone>
+        - _run_single(img, img_path, ...) : List<BubbleZone>
+        - _detect(img) : list<dict>
+        - _nms_keep_smallest(detections, iou_thresh) : list<dict>
+        - _draw_detections(img, detections) : Mat
+    }
+}
+
+EngineOCR <|-- YOLOTextDetector
+EngineOCRFactory o-- EngineOCR : gerencia
+
+EngineOCRFactory ..> YOLOTextDetector : instancia
+
+@enduml
