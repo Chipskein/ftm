@@ -22,13 +22,14 @@ Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curs
 - [Arquivos de Saída](#arquivos-de-saída)
 - [Etapas do Pipeline](#etapas-do-pipeline)
 - [Formato do `bubbles.json`](#formato-do-bubblesjson)
+- [Datasets](#Datasets)
 - [Aviso Legal (Disclaimer)](#aviso-legal-disclaimer)
 
 ---
 
 ## Funcionalidades
 
-- **Detecção de Balões** — Detecção via YOLO
+- **Detecção de Balões** — Detecção via YOLO com modelo fine-tuned no dataset Manga109-s
 - **Extração de Texto** — MangaOCR para reconhecimento preciso de japonês
 - **Tradução** — Modelos Ollama (`translategemma:4b` / `translategemma:12b`)
 - **Diagramação** — Renderiza o texto traduzido de volta nos balões
@@ -52,13 +53,13 @@ Executa o pipeline completo (detecção → extração → tradução → diagra
 
 > **Requisitos:** Python 3.9+, [Ollama](https://ollama.com/) rodando localmente e, opcionalmente, uma GPU compatível com CUDA.
 
-## Via pipx (recomendado para uso como comando global)
- 
+### Via pipx (recomendado para uso como comando global)
+
 **Instalação padrão:**
 ```bash
 pipx install "git+ssh://git@github.com/Chipskein/ftm.git" --python /usr/bin/python3.11 --verbose
 ```
- 
+
 **Com suporte a GPU NVIDIA (nvidia-ml-py):**
 ```bash
 pipx install "ftm[nvidia] @ git+ssh://git@github.com/Chipskein/ftm.git" --python /usr/bin/python3.11 --verbose
@@ -144,6 +145,8 @@ python -m ftm --image <caminho> [opções]
 
 ## Exemplos
 
+> **Nota:** As imagens utilizadas nos testes e exemplos visuais deste projeto são provenientes do dataset [Manga109-s](http://www.manga109.org), licenciado para uso acadêmico. Por restrições de direitos autorais, essas imagens não estão disponíveis neste repositório — os resultados completos do pipeline podem ser consultados no texto acadêmico do TCC.
+
 **Traduzir para português:**
 ```bash
 python -m ftm --image pagina.jpg --translate-lang pt
@@ -217,9 +220,9 @@ Cada etapa pode ser executada de forma independente usando `--steps` e `--bubble
 ---
 
 ## Formato do `bubbles.json`
- 
+
 O arquivo JSON intermediário armazena os dados de cada balão detectado:
- 
+
 ```json
 [
   {
@@ -245,6 +248,45 @@ O arquivo JSON intermediário armazena os dados de cada balão detectado:
     "typesetting_time_s": 0.08
   }
 ]
+```
+
+---
+
+## Datasets
+
+### Dataset — Manga109-s
+ 
+O modelo de detecção de balões foi treinado com o dataset [Manga109-s](http://www.manga109.org), uma versão do Manga109 licenciada para uso acadêmico e de pesquisa.
+ 
+```bibtex
+@inproceedings{fujimoto2018manga109,
+  title     = {Manga109 dataset and creation of metadata},
+  author    = {Fujimoto, Azuma and Ogawa, Toru and Yamamoto, Kazuyoshi and Matsui, Yusuke and Yamasaki, Toshihiko and Aizawa, Kiyoharu},
+  booktitle = {Proceedings of the 1st Workshop on coMics ANalysis, Processing and Understanding (MANPU), ICPR},
+  year      = {2018}
+}
+```
+ 
+### Dataset — COO: Comic Onomatopoeia Dataset
+ 
+```bibtex
+@inproceedings{baek2022COO,
+  title     = {COO: Comic Onomatopoeia Dataset for Recognizing Arbitrary or Truncated Texts},
+  author    = {Baek, Jeonghun and Matsui, Yusuke and Aizawa, Kiyoharu},
+  booktitle = {Proceedings of the European Conference on Computer Vision (ECCV)},
+  year      = {2022}
+}
+```
+ 
+### Dataset — Manga109Dialog
+ 
+```bibtex
+@inproceedings{li2024manga109dialog,
+  title     = {Manga109Dialog: A Large-scale Dialogue Dataset for Comics Speaker Detection},
+  author    = {Li, Yingxuan and Aizawa, Kiyoharu and Matsui, Yusuke},
+  booktitle = {Proceedings of the IEEE International Conference on Multimedia and Expo},
+  year      = {2024}
+}
 ```
 
 ---
