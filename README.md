@@ -256,7 +256,7 @@ O arquivo JSON intermediário armazena os dados de cada balão detectado:
 
 ### Dataset — Manga109-s
  
-O modelo de detecção de balões foi treinado com o dataset [Manga109-s](http://www.manga109.org), uma versão do Manga109 licenciada para uso acadêmico e de pesquisa.
+O modelo de detecção de balões foi ajustado com o dataset [Manga109-s](http://www.manga109.org), uma versão do Manga109 licenciada para uso acadêmico e de pesquisa.
  
 ```bibtex
 @inproceedings{fujimoto2018manga109,
