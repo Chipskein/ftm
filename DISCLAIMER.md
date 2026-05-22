@@ -1,4 +1,4 @@
-# ⚠️ Legal Disclaimer — FTM (Manga Translation Tool)
+# ⚠️ Legal Disclaimer — FTM (Ferramenta de Tradução de Mangás)
 
 > **READ CAREFULLY BEFORE USING THIS SOFTWARE.**
 >
