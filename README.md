@@ -1,30 +1,33 @@
 # FTM — Ferramenta de Tradução de Mangás
 
-Pipeline modular de tradução de mangás com aceleração GPU que detecta automaticamente balões de fala, extrai o texto em japonês, traduz e insere o resultado de volta na imagem.
+Pipeline modular de tradução de mangás que detecta automaticamente balões de fala, extrai o texto em japonês, traduz e insere o resultado de volta na imagem.
+
+Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TADS) do Instituto Federal do Rio Grande do Sul (IFRS). O texto completo do trabalho está disponível [aqui](URL_DO_TCC).
 
 ---
-## 📑 Índice
 
-- [✨ Funcionalidades](#-funcionalidades)
-- [🚀 Início Rápido](#-início-rápido)
-- [📦 Instalação](#-instalação)
+## Índice
+
+- [Funcionalidades](#funcionalidades)
+- [Início Rápido](#início-rápido)
+- [Instalação](#instalação)
+  - [Via pipx (recomendado para uso como comando global)](#via-pipx-recomendado-para-uso-como-comando-global)
   - [Via pip (recomendado)](#via-pip-recomendado)
   - [Via clone local](#via-clone-local)
   - [Modelo de tradução (Ollama)](#modelo-de-tradução-ollama)
-- [🛠️ Referência da CLI](#️-referência-da-cli)
+- [Referência da CLI](#referência-da-cli)
   - [Obrigatório](#obrigatório)
   - [Opcional](#opcional)
-- [🔧 Exemplos](#-exemplos)
-- [🗂️ Arquivos de Saída](#️-arquivos-de-saída)
-- [🧩 Etapas do Pipeline](#-etapas-do-pipeline)
-- [📋 Formato do `bubbles.json`](#-formato-do-bubblesjson)
-- [🤝 Contribuindo](#-contribuindo)
-- [⚠️ Aviso Legal (Disclaimer)](#️-aviso-legal-disclaimer)
+- [Exemplos](#exemplos)
+- [Arquivos de Saída](#arquivos-de-saída)
+- [Etapas do Pipeline](#etapas-do-pipeline)
+- [Formato do `bubbles.json`](#formato-do-bubblesjson)
+- [Contribuindo](#contribuindo)
+- [Aviso Legal (Disclaimer)](#aviso-legal-disclaimer)
 
 ---
 
-
-## ✨ Funcionalidades
+## Funcionalidades
 
 - **Detecção de Balões** — Detecção via YOLO
 - **Extração de Texto** — MangaOCR para reconhecimento preciso de japonês
@@ -36,19 +39,31 @@ Pipeline modular de tradução de mangás com aceleração GPU que detecta autom
 
 ---
 
-## 🚀 Início Rápido
+## Início Rápido
 
 ```bash
 python -m ftm --image ./pagina_manga.jpg
 ```
 
-Executa o pipeline completo (detecção → extração → tradução → diagramação) e salva a imagem traduzida em `./tmp/`.
+Executa o pipeline completo (detecção → extração → tradução → diagramação) e salva a imagem traduzida no diretório informado.
 
 ---
 
-## 📦 Instalação
+## Instalação
 
 > **Requisitos:** Python 3.9+, [Ollama](https://ollama.com/) rodando localmente e, opcionalmente, uma GPU compatível com CUDA.
+
+## Via pipx (recomendado para uso como comando global)
+ 
+**Instalação padrão:**
+```bash
+pipx install "git+ssh://git@github.com/Chipskein/ftm.git" --python /usr/bin/python3.11 --verbose
+```
+ 
+**Com suporte a GPU NVIDIA (nvidia-ml-py):**
+```bash
+pipx install "ftm[nvidia] @ git+ssh://git@github.com/Chipskein/ftm.git" --python /usr/bin/python3.11 --verbose
+```
 
 ### Via pip (recomendado)
 
@@ -97,7 +112,7 @@ ollama pull translategemma:12b
 
 ---
 
-## 🛠️ Referência da CLI
+## Referência da CLI
 
 ```
 python -m ftm --image <caminho> [opções]
@@ -129,7 +144,7 @@ python -m ftm --image <caminho> [opções]
 
 ---
 
-## 🔧 Exemplos
+## Exemplos
 
 **Traduzir para português:**
 ```bash
@@ -139,11 +154,6 @@ python -m ftm --image pagina.jpg --translate-lang pt
 **Rodar apenas tradução e diagramação (usando JSON salvo anteriormente):**
 ```bash
 python -m ftm --image pagina.jpg --bubbles-json ./tmp/pagina_bubbles.json --steps translation typesetting
-```
-
-**Usar o modelo maior para melhor qualidade:**
-```bash
-python -m ftm --image pagina.jpg --translate-model translategemma:12b
 ```
 
 **Rodar somente na CPU (sem GPU):**
@@ -163,7 +173,7 @@ python -m ftm --image pagina.jpg --ollama-host http://192.168.1.100:11434
 
 ---
 
-## 🗂️ Arquivos de Saída
+## Arquivos de Saída
 
 Após uma execução bem-sucedida, os seguintes arquivos são salvos no diretório `--tmp`:
 
@@ -175,7 +185,7 @@ Após uma execução bem-sucedida, os seguintes arquivos são salvos no diretór
 
 ---
 
-## 🧩 Etapas do Pipeline
+## Etapas do Pipeline
 
 ```
 Imagem de Entrada
@@ -208,42 +218,40 @@ Cada etapa pode ser executada de forma independente usando `--steps` e `--bubble
 
 ---
 
-## 📋 Formato do `bubbles.json`
-
+## Formato do `bubbles.json`
+ 
 O arquivo JSON intermediário armazena os dados de cada balão detectado:
-
+ 
 ```json
 [
   {
+    "id": 0,
+    "x": 120,
+    "y": 340,
+    "w": 200,
+    "h": 150,
     "crop": "./tmp/pagina_crop_0.jpg",
     "jp_text": "こんにちは！",
     "translated_text": "Olá!",
+    "area": 30000,
+    "detection_method": "yolo",
+    "detection_rects_total": 8,
+    "detection_rects_kept": 5,
+    "detection_time_s": 0.21,
+    "grouping_time_s": 0.03,
     "extraction_symbols": 6,
     "extraction_time_s": 0.42,
     "translation_symbols": 6,
-    "translating_time_s": 1.13
+    "translating_time_s": 1.13,
+    "typesetting_characters": 4,
+    "typesetting_time_s": 0.08
   }
 ]
 ```
 
 ---
 
-## 🤝 Contribuindo
-
-Pull requests são bem-vindos! Para começar:
-
-```bash
-git checkout -b feature/minha-feature
-# faça suas alterações
-git commit -m "feat: minha feature"
-git push origin feature/minha-feature
-```
-
-Para mudanças maiores, abra uma issue primeiro para discussão.
-
----
-
-## ⚠️ Aviso Legal (Disclaimer)
+## Aviso Legal (Disclaimer)
 
 > **LEIA COM ATENÇÃO ANTES DE UTILIZAR ESTA FERRAMENTA.**
 
