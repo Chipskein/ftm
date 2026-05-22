@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("BubbleTypesetter")
 
 class BubbleTypesetter:
-    DEFAULT_FONT_PATH = font("KOMIKAX_.ttf")
+    DEFAULT_FONT_PATH = font("ComicNeue-Regular.ttf")
     PADDING = 2
     MAX_FONT_SIZE = 120
     MIN_FONT_SIZE = 6
