@@ -22,7 +22,6 @@ Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curs
 - [Arquivos de Saída](#arquivos-de-saída)
 - [Etapas do Pipeline](#etapas-do-pipeline)
 - [Formato do `bubbles.json`](#formato-do-bubblesjson)
-- [Contribuindo](#contribuindo)
 - [Aviso Legal (Disclaimer)](#aviso-legal-disclaimer)
 
 ---
@@ -106,7 +105,6 @@ Após instalar, baixe o modelo de tradução via Ollama:
 ```bash
 ollama pull translategemma:4b
 
-# ou o modelo maior, para melhor qualidade
 ollama pull translategemma:12b
 ```
 
