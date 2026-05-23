@@ -34,7 +34,7 @@ Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curs
 https://github.com/user-attachments/assets/1bcc40bb-ee92-44f4-a60e-54415038b997
 
 
-[![Demo](https://img.youtube.com/vi/73rHTp9IfYo/0.jpg)](https://youtu.be/73rHTp9IfYo)
+![Demo](https://youtu.be/73rHTp9IfYo)
 
 ---
 
