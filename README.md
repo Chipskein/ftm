@@ -11,6 +11,7 @@ Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curs
 - [Funcionalidades](#funcionalidades)
 - [Início Rápido](#início-rápido)
 - [Instalação](#instalação)
+  - [Via uv (recomendado para uso como comando global)](#via-uv-recomendado-para-uso-como-comando-global)
   - [Via pipx (recomendado para uso como comando global)](#via-pipx-recomendado-para-uso-como-comando-global)
   - [Via pip (recomendado)](#via-pip-recomendado)
   - [Via clone local](#via-clone-local)
@@ -52,6 +53,14 @@ Executa o pipeline completo (detecção → extração → tradução → diagra
 ## Instalação
 
 > **Requisitos:** Python 3.9+, [Ollama](https://ollama.com/) rodando localmente e, opcionalmente, uma GPU compatível com CUDA.
+
+
+### Via uv (recomendado para uso como comando global)
+
+**Instalação padrão:**
+```bash
+uv tool install "git+ssh://git@github.com/Chipskein/ftm.git" --python 3.11
+```
 
 ### Via pipx (recomendado para uso como comando global)
 
