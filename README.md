@@ -30,7 +30,7 @@ Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curs
 ---
 
 ## Demo
-![demo](https://youtu.be/73rHTp9IfYo)
+[demo](https://youtu.be/73rHTp9IfYo)
 
 ---
 
