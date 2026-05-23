@@ -34,7 +34,7 @@ Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curs
 https://github.com/user-attachments/assets/1bcc40bb-ee92-44f4-a60e-54415038b997
 
 
-![Video da demo](https://youtu.be/73rHTp9IfYo)
+[Video da demo](https://youtu.be/73rHTp9IfYo)
 
 *Manga usado na Demo: Hamlet©Taro Minamoto via Manga109-s Dataset*
 
