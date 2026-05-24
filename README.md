@@ -8,9 +8,11 @@ Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curs
 
 ## Índice
 
+- [Demo](#demo)
 - [Funcionalidades](#funcionalidades)
 - [Início Rápido](#início-rápido)
 - [Instalação](#instalação)
+  - [Via uv (recomendado para uso como comando global)](#via-uv-recomendado-para-uso-como-comando-global)
   - [Via pipx (recomendado para uso como comando global)](#via-pipx-recomendado-para-uso-como-comando-global)
   - [Via pip (recomendado)](#via-pip-recomendado)
   - [Via clone local](#via-clone-local)
@@ -24,6 +26,17 @@ Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curs
 - [Formato do `bubbles.json`](#formato-do-bubblesjson)
 - [Datasets](#Datasets)
 - [Aviso Legal (Disclaimer)](#aviso-legal-disclaimer)
+
+---
+
+## Demo
+
+https://github.com/user-attachments/assets/1bcc40bb-ee92-44f4-a60e-54415038b997
+
+
+[Video da demo](https://youtu.be/73rHTp9IfYo)
+
+*Manga usado na Demo: Hamlet©Taro Minamoto via Manga109-s Dataset*
 
 ---
 
@@ -52,6 +65,14 @@ Executa o pipeline completo (detecção → extração → tradução → diagra
 ## Instalação
 
 > **Requisitos:** Python 3.9+, [Ollama](https://ollama.com/) rodando localmente e, opcionalmente, uma GPU compatível com CUDA.
+
+
+### Via uv (recomendado para uso como comando global)
+
+**Instalação padrão:**
+```bash
+uv tool install "git+ssh://git@github.com/Chipskein/ftm.git" --python 3.11
+```
 
 ### Via pipx (recomendado para uso como comando global)
 
@@ -256,7 +277,7 @@ O arquivo JSON intermediário armazena os dados de cada balão detectado:
 
 ### Dataset — Manga109-s
  
-O modelo de detecção de balões foi treinado com o dataset [Manga109-s](http://www.manga109.org), uma versão do Manga109 licenciada para uso acadêmico e de pesquisa.
+O modelo de detecção de balões foi ajustado com o dataset [Manga109-s](http://www.manga109.org), uma versão do Manga109 licenciada para uso acadêmico e de pesquisa.
  
 ```bibtex
 @inproceedings{fujimoto2018manga109,
