@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 
 CLS_TEXT = 0
 CLS_ONOMATOPEIA = 1
+CLS_COLORS = {
+    CLS_TEXT:        (0, 200, 0),
+    CLS_ONOMATOPEIA: (0, 0, 255)
+}
 
 class YOLOTextDetector(EngineOCR):
     def __init__(
@@ -82,16 +86,17 @@ class YOLOTextDetector(EngineOCR):
         os.makedirs(crops_dir, exist_ok=True)
 
         start_detection_time = time.perf_counter()
-        raw_detections = [d for d in self._detect(img) if d["class_id"] == CLS_TEXT]
+        raw_detections = self._detect(img)
         if self.debug:
             debug_img = self._draw_detections(img.copy(), raw_detections)
             cv2.imwrite(os.path.join(output_dir, f"{base_name}_raw_debug.png"), debug_img)
         detection_time = time.perf_counter() - start_detection_time
         
-        num_raw_detection = len(raw_detections)
+        text_detections = [d for d in raw_detections if d["class_id"] == CLS_TEXT]
+        num_raw_detection = len(text_detections)
         
         start_group = time.perf_counter()
-        detections = self._nms_keep_smallest(raw_detections)
+        detections = self._nms_keep_smallest(text_detections)
         group_time = time.perf_counter() - start_group
         num_kept_detection = len(detections)
 
@@ -216,10 +221,11 @@ class YOLOTextDetector(EngineOCR):
     ) -> cv2.typing.MatLike:
         for det in detections:
             bx, by, bw, bh = det["bbox"]
-            cv2.rectangle(img, (bx, by), (bx + bw, by + bh), (0, 200, 0), 2)
+            color = CLS_COLORS.get(det["class_id"], (200, 200, 200))
+            cv2.rectangle(img, (bx, by), (bx + bw, by + bh), color, 2)
             class_id = det["class_id"]
             class_name = self.model.names[class_id]
             label = f"{class_name} {det['confidence']:.2f}"
             cv2.putText(img, label, (bx, max(by - 6, 0)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 0), 1, cv2.LINE_AA)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
         return img
