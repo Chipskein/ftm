@@ -1,5 +1,5 @@
 @startuml
-skinparam LineType Ortho
+left to right direction
 
 class FTM
 
@@ -8,54 +8,45 @@ package "profiler" as profiler {
     class MonitorContext <<ContextVar>>
     class step <<decorator>>
 }
-
 package "dto" as dto {
     class BubbleZone <<TypeDict>>
 }
-
 package "steps" as steps {
     package "detection" {
         abstract class EngineOCR
         class EngineOCRFactory
         class YOLOTextDetector extends EngineOCR
     }
-
     package "extraction" {
         abstract class TextExtractor
         class MangaOCRExtractor extends TextExtractor
     }
-
     package "translation" {
         abstract class Translator
         class OllamaTranslator extends Translator
     }
-
     package "typesetting" {
         class BubbleTypesetter
     }
 }
 
-
 ' Relações de Orquestração
-
 FTM o-- ResourceMonitor
 FTM .. MonitorContext
 FTM .. BubbleZone
-
 ' Relações de Profiling
 step .. MonitorContext
 step .. ResourceMonitor
-
 ' Relações de Execução (Dependency Injection/Usage)
 FTM .. EngineOCRFactory
 FTM .. TextExtractor
 FTM .. Translator
 FTM .. BubbleTypesetter
-
 EngineOCRFactory .. YOLOTextDetector
 
-steps -[hidden]up- dto
-steps -[hidden]up- profiler
-dto -[hidden]right- FTM
-profiler -[hidden]left- FTM
+' Layout
+FTM -[hidden]right- dto
+dto -[hidden]right- profiler
+dto -[hidden]down- steps
+
 @enduml
