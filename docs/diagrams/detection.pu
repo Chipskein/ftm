@@ -7,14 +7,8 @@ package "detection" {
         + __init__(name: str)
         {abstract} + run(img_path, output_dir) : list
         + loadImage(image_path) : Mat
-        + preProcessImage(image) : dict
-        + assess_and_fix_quality(img) : Mat
         + detect_spread_split(img) : int | None
         + crop_bubble(img, x, y, w, h, ...) : str
-        {static} # _upscale(img, scale) : Mat
-        {static} # _enhance_contrast_clahe(img) : Mat
-        {static} # _sharpen(img) : Mat
-        {static} # _iou(bbox_a, bbox_b) : float
     }
 
     class EngineOCRFactory {
