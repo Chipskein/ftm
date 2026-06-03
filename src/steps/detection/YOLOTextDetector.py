@@ -174,17 +174,14 @@ class YOLOTextDetector(EngineOCR):
         if not detections:
             return []
 
-        # Extrai bboxes [x, y, w, h] em array contíguo float32
         boxes = np.array([d["bbox"] for d in detections], dtype=np.float32)
 
-        # Converte para [x1, y1, x2, y2] para facilitar cálculo de interseção
         x1 = boxes[:, 0]
         y1 = boxes[:, 1]
         x2 = boxes[:, 0] + boxes[:, 2]
         y2 = boxes[:, 1] + boxes[:, 3]
         areas = boxes[:, 2] * boxes[:, 3]
 
-        # Ordena do menor para o maior (índices originais)
         order = np.argsort(areas)
 
         kept_indices = []
@@ -198,7 +195,6 @@ class YOLOTextDetector(EngineOCR):
 
             rest = order[1:]
 
-            # Calcula interseção vetorizada entre box i e todos os restantes
             ix1 = np.maximum(x1[i], x1[rest])
             iy1 = np.maximum(y1[i], y1[rest])
             ix2 = np.minimum(x2[i], x2[rest])
@@ -211,7 +207,6 @@ class YOLOTextDetector(EngineOCR):
             union = areas[i] + areas[rest] - inter
             iou   = inter / np.where(union > 0, union, 1e-6)
 
-            # Mantém apenas os que não têm sobreposição excessiva com i
             order = rest[iou <= iou_threshold]
 
         return [detections[i] for i in kept_indices]
