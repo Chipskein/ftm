@@ -96,7 +96,7 @@ class YOLOTextDetector(EngineOCR):
         num_raw_detection = len(text_detections)
         
         start_group = time.perf_counter()
-        detections = self._nms_keep_smallest(text_detections)
+        detections = self._merge_overlapping(text_detections)
         group_time = time.perf_counter() - start_group
         num_kept_detection = len(detections)
 
@@ -139,15 +139,6 @@ class YOLOTextDetector(EngineOCR):
         return results
 
     def _detect(self, img: cv2.typing.MatLike) -> list[dict]:
-        """
-        Run YOLOv8s-seg on *img* and return a list of detection dicts:
-            {
-                "bbox":       (x, y, w, h),          # int pixel coords
-                "class_id":   int,
-                "confidence": float,
-                "mask":       np.ndarray | None,      # H×W uint8 binary
-            }
-        """
         yolo_results = list(self.model.predict(source=img, conf=self.conf_threshold, imgsz=self.imgsz, verbose=True))
         if not yolo_results:
             return []
@@ -170,46 +161,58 @@ class YOLOTextDetector(EngineOCR):
         logger.debug("YOLO — detections=%d", len(detections))
         return detections
 
-    def _nms_keep_smallest(self, detections: list[dict], iou_threshold: float = 0.3) -> list[dict]:
+    def _merge_overlapping(self, detections: list[dict], iou_threshold: float = 0.1) -> list[dict]:
         if not detections:
             return []
 
-        boxes = np.array([d["bbox"] for d in detections], dtype=np.float32)
+        merged = True
+        current = detections[:]
 
-        x1 = boxes[:, 0]
-        y1 = boxes[:, 1]
-        x2 = boxes[:, 0] + boxes[:, 2]
-        y2 = boxes[:, 1] + boxes[:, 3]
-        areas = boxes[:, 2] * boxes[:, 3]
+        while merged:
+            merged = False
+            result = []
+            used = [False] * len(current)
 
-        order = np.argsort(areas)
+            for i in range(len(current)):
+                if used[i]:
+                    continue
 
-        kept_indices = []
+                group = [current[i]]
+                used[i] = True
 
-        while order.size > 0:
-            i = order[0]
-            kept_indices.append(i)
+                for j in range(i + 1, len(current)):
+                    if used[j]:
+                        continue
 
-            if order.size == 1:
-                break
+                    ax1, ay1, aw, ah = current[i]["bbox"]
+                    bx1, by1, bw, bh = current[j]["bbox"]
+                    ix1 = max(ax1, bx1)
+                    iy1 = max(ay1, by1)
+                    ix2 = min(ax1 + aw, bx1 + bw)
+                    iy2 = min(ay1 + ah, by1 + bh)
+                    inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+                    union = aw * ah + bw * bh - inter
+                    iou = inter / union if union > 0 else 0.0
 
-            rest = order[1:]
+                    if iou > iou_threshold:
+                        group.append(current[j])
+                        used[j] = True
+                        merged = True
 
-            ix1 = np.maximum(x1[i], x1[rest])
-            iy1 = np.maximum(y1[i], y1[rest])
-            ix2 = np.minimum(x2[i], x2[rest])
-            iy2 = np.minimum(y2[i], y2[rest])
+                x1 = min(d["bbox"][0] for d in group)
+                y1 = min(d["bbox"][1] for d in group)
+                x2 = max(d["bbox"][0] + d["bbox"][2] for d in group)
+                y2 = max(d["bbox"][1] + d["bbox"][3] for d in group)
+                best = max(group, key=lambda d: d["confidence"])
+                result.append({
+                    "bbox":       (x1, y1, x2 - x1, y2 - y1),
+                    "class_id":   best["class_id"],
+                    "confidence": best["confidence"],
+                })
 
-            inter_w = np.maximum(0.0, ix2 - ix1)
-            inter_h = np.maximum(0.0, iy2 - iy1)
-            inter   = inter_w * inter_h
+            current = result
 
-            union = areas[i] + areas[rest] - inter
-            iou   = inter / np.where(union > 0, union, 1e-6)
-
-            order = rest[iou <= iou_threshold]
-
-        return [detections[i] for i in kept_indices]
+        return current
 
     def _draw_detections(
         self, img: cv2.typing.MatLike, detections: list[dict]

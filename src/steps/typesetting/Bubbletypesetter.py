@@ -5,7 +5,7 @@ import time
 from typing import List, Tuple, Dict, Optional, Any
 
 from ...profiler.decorator import step
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 from ...assets import font
 
 logging.basicConfig(level=logging.INFO)
@@ -78,11 +78,8 @@ class BubbleTypesetter:
 
     @step("BubbleTypesetter._apply_cleaning")
     def _apply_cleaning(self, canvas: Image.Image, mask: Image.Image, color: Tuple[int, int, int]):
-        blurred = canvas.filter(ImageFilter.GaussianBlur(radius=6))
-        canvas.paste(blurred, mask=mask)
-        
         tint_layer = Image.new("RGB", canvas.size, color)
-        tint_mask = mask.point(lambda p: p * 200 // 255)
+        tint_mask = mask
         canvas.paste(tint_layer, mask=tint_mask)
 
     @step("BubbleTypesetter._draw_centered_text")
@@ -107,7 +104,6 @@ class BubbleTypesetter:
 
     @step("BubbleTypesetter._fit_text")
     def _fit_text(self, text: str, max_w: int, max_h: int) -> Tuple[ImageFont.FreeTypeFont, str]:
-        """Encontra o equilíbrio entre tamanho de fonte e quebra de linha."""
         for size in range(self.MAX_FONT_SIZE, self.MIN_FONT_SIZE - 1, -1):
             font = self._get_font(size)
             wrapped = self._wrap_text_pixel_width(text, font, max_w)
@@ -155,8 +151,7 @@ class BubbleTypesetter:
             
         return "\n".join(lines)
 
-    @staticmethod
-    def _sample_color(img: Image.Image, x: int, y: int, w: int, h: int) -> Tuple[int, int, int]:
+    def _sample_color(self, img: Image.Image, x: int, y: int, w: int, h: int) -> Tuple[int, int, int]:
         img_w, img_h = img.size
         box = (max(0, x), max(0, y), min(img_w, x + w), min(img_h, y + h))
         
@@ -173,8 +168,7 @@ class BubbleTypesetter:
 
         return max(colors, key=lambda item: item[0])[1]
 
-    @staticmethod
-    def _get_contrast_color(bg_rgb: Tuple[int, int, int]) -> Tuple[int, int, int]:
+    def _get_contrast_color(self, bg_rgb: Tuple[int, int, int]) -> Tuple[int, int, int]:
         r, g, b = [v / 255.0 for v in bg_rgb]
         lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
         return (0, 0, 0) if lum > 0.5 else (255, 255, 255)
