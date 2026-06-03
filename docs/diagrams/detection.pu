@@ -29,7 +29,7 @@ package "detection" {
         + run(img_path, output_dir) : List<BubbleZone>
         - _run_single(img, img_path, ...) : List<BubbleZone>
         - _detect(img) : list<dict>
-        - _nms_keep_smallest(detections, iou_thresh) : list<dict>
+        - _merge_overlapping(detections, iou_threshold) : list<dict>
         - _draw_detections(img, detections) : Mat
     }
 }
