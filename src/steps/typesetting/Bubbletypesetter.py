@@ -158,13 +158,8 @@ class BubbleTypesetter:
         if box[2] <= box[0] or box[3] <= box[1]:
             return (255, 255, 255)
 
-        region = img.crop(box).convert("RGB")
-        colors = region.getcolors(maxcolors=1024)
-
-        if not colors:
-            # Fallback
-            region = region.quantize(colors=256).convert("RGB")
-            colors = region.getcolors(maxcolors=256)
+        region = img.crop(box).convert("RGB").quantize(colors=256).convert("RGB")
+        colors = region.getcolors()
 
         return max(colors, key=lambda item: item[0])[1]
 
