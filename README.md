@@ -2,7 +2,7 @@
 
 Pipeline modular de tradução de mangás que detecta automaticamente balões de fala, extrai o texto em japonês, traduz e insere o resultado de volta na imagem.
 
-Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TADS) do Instituto Federal do Rio Grande do Sul (IFRS). **O texto completo do trabalho estará disponível [aqui](URL_DO_TCC) após a defesa**.
+Este projeto foi desenvolvido como Trabalho de Conclusão de Curso (TCC) do curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TADS) do Instituto Federal do Rio Grande do Sul (IFRS). **O texto completo do trabalho esta disponível [aqui](https://drive.google.com/file/d/1kjGnMGfA0cU3EMXYxszLFTqJ5tjV5Qku/view?usp=sharing)**.
 
 ---
 
